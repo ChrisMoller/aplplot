@@ -1,0 +1,84 @@
+aplplot
+=======
+
+A GNU APL extension that provides plotting capability
+
+
+Build and installation:
+
+  1. git clone https://github.com/ChrisMoller/aplplot.git
+
+  2. cd aplplot
+
+  3. edit configure.ac to set APL_SOURCES=-I../../../../apl-1.3/src/native 
+	to the right place
+
+  4. ./autogen.sh
+
+  5. make
+
+  6. sudo make install
+
+
+Testing/demos
+
+  1. start APL
+
+  2. )load plotsincos
+
+  3. plotsincos
+
+  4. plotcomplex
+
+
+
+Example usage
+
+	 'libaplplot.so' quad-FX  'plot'
+
+	   plot a
+
+	Where a is:
+
+		1. A simple numeric vector, yielding a simple x-origin-0 graph
+			of those values.
+
+		2. An n-by-2 numeric array, yielding an XY plot of those values
+
+		3. A vector of complex values, yielding a 3-space plot.
+
+		Other capabilities will be added as time goes on.
+
+
+
+	  'options' plot a
+
+	Like above but with a semicolon list of option to control the plot.  At 
+	the moment, three options are supported:
+
+		1. 'width <value>' where <value> is an interger plot width.
+
+		2. 'height <value>' where <value> is an interger plot height.
+
+		3. 'dims <width> <height' combining the above into one operations
+
+		Other options will be added as time goes on.
+
+		All options are retained and need not be set for subsequent plots.
+		'options' plot '' can be used to store options without creating a 
+		plot.
+
+
+	The plot function spawns and detaches processes to display the plots; as
+	many plots as you like can be displayed simultaneously.  The function 
+	returns the process Id (pid) of the display processes; at some future 
+	time a mechanism will be added to kill those processes; at the moment,
+	they can be killed by closing their windows.  At present, the displays
+	are created using the ImageMagick 'display' utility; right-clicking in
+	the window brings up a menu that provides a number of capabilities, 
+	including that of saving the image in a variety of formats.  (Future 
+	enhancements of the function will likely include an ability to save 
+	the plots in scalable formats.)
+
+
+
