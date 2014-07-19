@@ -1,0 +1,391 @@
+<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+
+<!DOCTYPE Workspace
+[
+    <!ELEMENT Workspace (Value*,Ravel*,SymbolTable,Symbol*,StateIndicator)>
+    <!ATTLIST Workspace  wsid     CDATA #REQUIRED>
+    <!ATTLIST Workspace  year     CDATA #REQUIRED>
+    <!ATTLIST Workspace  month    CDATA #REQUIRED>
+    <!ATTLIST Workspace  day      CDATA #REQUIRED>
+    <!ATTLIST Workspace  hour     CDATA #REQUIRED>
+    <!ATTLIST Workspace  minute   CDATA #REQUIRED>
+    <!ATTLIST Workspace  second   CDATA #REQUIRED>
+    <!ATTLIST Workspace  timezone CDATA #REQUIRED>
+
+        <!ELEMENT Value (#PCDATA)>
+        <!ATTLIST Value flg    CDATA #REQUIRED>
+        <!ATTLIST Value vid    CDATA #REQUIRED>
+        <!ATTLIST Value parent CDATA #IMPLIED>
+        <!ATTLIST Value rk     CDATA #REQUIRED>
+        <!ATTLIST Value sh-0   CDATA #IMPLIED>
+        <!ATTLIST Value sh-1   CDATA #IMPLIED>
+        <!ATTLIST Value sh-2   CDATA #IMPLIED>
+        <!ATTLIST Value sh-3   CDATA #IMPLIED>
+        <!ATTLIST Value sh-4   CDATA #IMPLIED>
+        <!ATTLIST Value sh-5   CDATA #IMPLIED>
+        <!ATTLIST Value sh-6   CDATA #IMPLIED>
+        <!ATTLIST Value sh-7   CDATA #IMPLIED>
+
+        <!ELEMENT Ravel (#PCDATA)>
+        <!ATTLIST Ravel vid    CDATA #REQUIRED>
+        <!ATTLIST Ravel cells  CDATA #REQUIRED>
+
+        <!ELEMENT SymbolTable (Symbol*)>
+        <!ATTLIST SymbolTable size CDATA #REQUIRED>
+
+            <!ELEMENT Symbol (unused-name|Variable|Function|Label|Shared-Variable)*>
+            <!ATTLIST Symbol name       CDATA #REQUIRED>
+            <!ATTLIST Symbol stack-size CDATA #REQUIRED>
+
+                <!ELEMENT unused-name EMPTY>
+
+                <!ELEMENT Variable (#PCDATA)>
+                <!ATTLIST Variable vid CDATA #REQUIRED>
+
+                <!ELEMENT Function (UCS)>
+
+                <!ELEMENT Label (#PCDATA)>
+                <!ATTLIST Label value CDATA #REQUIRED>
+
+                <!ELEMENT Shared-Variable (#PCDATA)>
+                <!ATTLIST Shared-Variable key CDATA #REQUIRED>
+
+        <!ELEMENT UCS (#PCDATA)>
+        <!ATTLIST UCS uni CDATA #REQUIRED>
+
+        <!ELEMENT StateIndicator (SI-entry*)>
+        <!ATTLIST StateIndicator levels CDATA #REQUIRED>
+
+            <!ELEMENT SI-entry ((Execute|Statements|UserFunction),Parser+)>
+            <!ATTLIST SI-entry level     CDATA #REQUIRED>
+            <!ATTLIST SI-entry pc        CDATA #REQUIRED>
+            <!ATTLIST SI-entry line      CDATA #REQUIRED>
+            <!ATTLIST SI-entry vid_arg_A CDATA #IMPLIED>
+            <!ATTLIST SI-entry Id_arg_F  CDATA #IMPLIED>
+            <!ATTLIST SI-entry vid_arg_B CDATA #IMPLIED>
+
+                <!ELEMENT Statements (UCS)>
+
+                <!ELEMENT Execute (UCS)>
+
+                <!ELEMENT UserFunction (#PCDATA)>
+                <!ATTLIST UserFunction ufun-name    CDATA #REQUIRED>
+                <!ATTLIST UserFunction symbol-level CDATA #REQUIRED>
+
+                <!ELEMENT Parser (Token*)>
+                <!ATTLIST Parser assign-pending CDATA #REQUIRED>
+                <!ATTLIST Parser lookahead-high CDATA #REQUIRED>
+                    <!ELEMENT Token (#PCDATA)>
+                    <!ATTLIST Token pc           CDATA #REQUIRED>
+                    <!ATTLIST Token tag          CDATA #REQUIRED>
+                    <!ATTLIST Token char         CDATA #IMPLIED>
+                    <!ATTLIST Token int          CDATA #IMPLIED>
+                    <!ATTLIST Token float        CDATA #IMPLIED>
+                    <!ATTLIST Token real         CDATA #IMPLIED>
+                    <!ATTLIST Token imag         CDATA #IMPLIED>
+                    <!ATTLIST Token sym          CDATA #IMPLIED>
+                    <!ATTLIST Token line         CDATA #IMPLIED>
+                    <!ATTLIST Token vid          CDATA #IMPLIED>
+                    <!ATTLIST Token index        CDATA #IMPLIED>
+                    <!ATTLIST Token fun-id       CDATA #IMPLIED>
+                    <!ATTLIST Token ufun-name    CDATA #IMPLIED>
+                    <!ATTLIST Token symbol-level CDATA #IMPLIED>
+                    <!ATTLIST Token comment  CDATA #IMPLIED>
+
+]>
+
+
+    <!-- hour/minute/second is )SAVE time in UTC (aka. GMT).
+         timezone is offset to UTC in seconds.
+         local time is UTC + offset -->
+<Workspace wsid="plotsincos" year="2014" month="7" day="17"
+           hour="4" minute="24" second="39" timezone="-14400">
+
+  <Value flg="400" vid="0" parent="-1" rk="0"/>
+  <Value flg="400" vid="1" parent="-1" rk="0"/>
+  <Value flg="400" vid="2" parent="-1" rk="0"/>
+  <Value flg="400" vid="3" parent="-1" rk="0"/>
+  <Value flg="400" vid="4" parent="-1" rk="0"/>
+  <Value flg="400" vid="5" parent="-1" rk="0"/>
+  <Value flg="400" vid="6" parent="-1" rk="0"/>
+  <Value flg="400" vid="7" parent="-1" rk="1" sh-0="2"/>
+  <Value flg="400" vid="8" parent="-1" rk="0"/>
+  <Value flg="400" vid="9" parent="-1" rk="0"/>
+  <Value flg="400" vid="10" parent="-1" rk="0"/>
+  <Value flg="400" vid="11" parent="-1" rk="0"/>
+  <Value flg="400" vid="12" parent="-1" rk="0"/>
+  <Value flg="400" vid="13" parent="-1" rk="0"/>
+  <Value flg="400" vid="14" parent="-1" rk="0"/>
+  <Value flg="400" vid="15" parent="-1" rk="0"/>
+  <Value flg="400" vid="16" parent="-1" rk="0"/>
+  <Value flg="400" vid="17" parent="-1" rk="0"/>
+  <Value flg="400" vid="18" parent="-1" rk="1" sh-0="1"/>
+  <Value flg="400" vid="19" parent="-1" rk="0"/>
+  <Value flg="400" vid="20" parent="-1" rk="1" sh-0="0"/>
+  <Value flg="400" vid="21" parent="-1" rk="0"/>
+  <Value flg="400" vid="22" parent="-1" rk="0"/>
+  <Value flg="400" vid="23" parent="-1" rk="0"/>
+  <Value flg="400" vid="24" parent="-1" rk="0"/>
+  <Value flg="400" vid="25" parent="-1" rk="1" sh-0="1"/>
+  <Value flg="400" vid="26" parent="-1" rk="0"/>
+  <Value flg="400" vid="27" parent="-1" rk="1" sh-0="6"/>
+  <Value flg="400" vid="28" parent="-1" rk="0"/>
+  <Value flg="400" vid="29" parent="-1" rk="0"/>
+  <Value flg="400" vid="30" parent="-1" rk="0"/>
+  <Value flg="400" vid="31" parent="-1" rk="1" sh-0="3"/>
+  <Value flg="400" vid="32" parent="-1" rk="0"/>
+  <Value flg="400" vid="33" parent="-1" rk="0"/>
+  <Value flg="400" vid="34" parent="-1" rk="0"/>
+  <Value flg="400" vid="35" parent="-1" rk="1" sh-0="256"/>
+  <Value flg="400" vid="36" parent="-1" rk="1" sh-0="4"/>
+  <Value flg="400" vid="37" parent="-1" rk="1" sh-0="21"/>
+  <Ravel vid="0" cells="⁵0J1"/>
+  <Ravel vid="1" cells="³6"/>
+  <Ravel vid="2" cells="³128"/>
+  <Ravel vid="3" cells="³1"/>
+  <Ravel vid="4" cells="³6"/>
+  <Ravel vid="5" cells="³128"/>
+  <Ravel vid="6" cells="³2"/>
+  <Ravel vid="7" cells="³2³128"/>
+  <Ravel vid="8" cells="³6"/>
+  <Ravel vid="9" cells="³128"/>
+  <Ravel vid="10" cells="³1"/>
+  <Ravel vid="11" cells="³6"/>
+  <Ravel vid="12" cells="³128"/>
+  <Ravel vid="13" cells="³2"/>
+  <Ravel vid="14" cells="³-4"/>
+  <Ravel vid="15" cells="³1"/>
+  <Ravel vid="16" cells="³80"/>
+  <Ravel vid="17" cells="³0"/>
+  <Ravel vid="18" cells="² "/>
+  <Ravel vid="19" cells="³10"/>
+  <Ravel vid="20" cells="² "/>
+  <Ravel vid="21" cells="³1"/>
+  <Ravel vid="22" cells="⁴1e-13"/>
+  <Ravel vid="23" cells="³0"/>
+  <Ravel vid="24" cells="³0"/>
+  <Ravel vid="25" cells="²C"/>
+  <Ravel vid="26" cells="³0"/>
+  <Ravel vid="27" cells="².,¹22C6²0_¹AF"/>
+  <Ravel vid="28" cells="³0"/>
+  <Ravel vid="29" cells="³1"/>
+  <Ravel vid="30" cells="³0"/>
+  <Ravel vid="31" cells="¹8¹D¹A
+    "/>
+  <Ravel vid="32" cells="³0"/>
+  <Ravel vid="33" cells="³0"/>
+  <Ravel vid="34" cells="³0"/>
+  <Ravel vid="35" cells="¹0¹1¹2¹3¹4¹5¹6¹7¹8¹9¹A
+    ¹B¹C¹D¹E¹F¹10¹11¹12¹13¹14¹15¹16¹17¹18¹19¹1A¹1B¹1C¹1D¹1E¹1F² !¹22²#$%¹26²'⁰
+    ²()*+,-./0123456789:;¹3C²=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijkl⁰
+    ²mnopqrstuvwxyz{|}~¹7F¹A5¹20AC¹21C4¹2227¹223C¹226C¹22C6¹22F8¹2338¹233A
+    ¹233C¹233E¹2341¹A1¹2344¹2345¹2395¹235E¹2339¹2346¹2364¹2347¹2348¹234A¹22A4
+    ¹3BB¹234D¹234F¹A3¹22A5¹2376¹2336¹2350¹2351¹3C7¹2354¹2356¹2357¹2358¹235A
+    ¹235B¹2308¹235C¹2362¹222A¹2368¹2355¹234E¹236C¹236A¹2223¹2502¹2524¹235F
+    ¹2206¹2207¹2192¹2563¹2551¹2557¹255D¹2190¹230A¹2510¹2514¹2534¹252C¹251C
+    ¹2500¹253C¹2191¹2193¹2554¹255A¹2569¹2566¹2560¹2550¹256C¹2261¹2378¹2377
+    ¹2235¹2337¹2342¹233B¹22A2¹22A3¹25CA¹2518¹250C¹2588¹2584¹258C¹2590¹2580
+    ¹237A¹2379¹2282¹2283¹235D¹2372¹2374¹2371¹233D¹2296¹25CB¹2228¹2373¹2349
+    ¹2208¹2229¹233F¹2340¹2265¹2264¹2260¹D7¹F7¹2359¹2218¹2375¹236B¹234B¹2352¹AF
+    ¹A8¹A0"/>
+  <Ravel vid="36" cells="³-1³0³0³0"/>
+  <Ravel vid="37" cells="²SystemVariable.cc:747"/>
+  <SymbolTable size="12">
+    <Symbol name="c" stack-size="1">
+      <unused-name/>
+    </Symbol>
+
+    <Symbol name="plot" stack-size="1">
+      <Function native="1">
+        <UCS uni="²libaplplot.so"/>
+      </Function>
+    </Symbol>
+
+    <Symbol name="plotcomplex" stack-size="1">
+      <Function>
+        <UCS uni="²plotcomplex;c;s¹A
+          ²c¹2190²2¹25CB²(¹2373²128)¹F7²6¹A
+          ²s¹2190²1¹25CB²(¹2373²128)¹F7²6¹A
+          ²z¹2190²c+s¹D7²0J1¹A
+          ²plot z¹A
+          "/>
+      </Function>
+    </Symbol>
+
+    <Symbol name="plotsincos" stack-size="1">
+      <Function>
+        <UCS uni="²plotsincos;c;s¹A
+          ²c¹2190²2¹25CB²(¹2373²128)¹F7²6¹A
+          ²s¹2190²1¹25CB²(¹2373²128)¹F7²6¹A
+          ²plot ¹2349²2 128¹2374²s,c¹A
+          "/>
+      </Function>
+    </Symbol>
+
+    <Symbol name="s" stack-size="1">
+      <unused-name/>
+    </Symbol>
+
+    <Symbol name="z" stack-size="1">
+      <unused-name/>
+    </Symbol>
+
+    <Symbol name="λ" stack-size="1">
+      <unused-name/>
+    </Symbol>
+
+    <Symbol name="χ" stack-size="1">
+      <unused-name/>
+    </Symbol>
+
+    <Symbol name="⍵" stack-size="1">
+      <unused-name/>
+    </Symbol>
+
+    <Symbol name="⍶" stack-size="1">
+      <unused-name/>
+    </Symbol>
+
+    <Symbol name="⍹" stack-size="1">
+      <unused-name/>
+    </Symbol>
+
+    <Symbol name="⍺" stack-size="1">
+      <unused-name/>
+    </Symbol>
+
+  </SymbolTable>
+
+  <Symbol name="⎕AI" stack-size="1">
+    <Variable vid="36"/>
+  </Symbol>
+
+  <Symbol name="⎕ARG" stack-size="1">
+    <unused-name/>
+  </Symbol>
+
+  <Symbol name="⎕AV" stack-size="1">
+    <Variable vid="35"/>
+  </Symbol>
+
+  <Symbol name="⎕EM" stack-size="1">
+    <unused-name/>
+  </Symbol>
+
+  <Symbol name="⎕ET" stack-size="1">
+    <unused-name/>
+  </Symbol>
+
+  <Symbol name="⎕LC" stack-size="1">
+    <Variable vid="34"/>
+  </Symbol>
+
+  <Symbol name="⎕PT" stack-size="1">
+    <Variable vid="33"/>
+  </Symbol>
+
+  <Symbol name="⎕SVE" stack-size="1">
+    <Variable vid="32"/>
+  </Symbol>
+
+  <Symbol name="⎕TC" stack-size="1">
+    <Variable vid="31"/>
+  </Symbol>
+
+  <Symbol name="⎕TS" stack-size="1">
+    <Variable vid="30"/>
+  </Symbol>
+
+  <Symbol name="⎕UL" stack-size="1">
+    <Variable vid="29"/>
+  </Symbol>
+
+  <Symbol name="⎕WA" stack-size="1">
+    <Variable vid="28"/>
+  </Symbol>
+
+  <Symbol name="⎕CT" stack-size="1">
+    <Variable vid="22"/>
+  </Symbol>
+
+  <Symbol name="⎕FC" stack-size="1">
+    <Variable vid="27"/>
+  </Symbol>
+
+  <Symbol name="⎕IO" stack-size="1">
+    <Variable vid="21"/>
+  </Symbol>
+
+  <Symbol name="⎕L" stack-size="1">
+    <Variable vid="26"/>
+  </Symbol>
+
+  <Symbol name="⎕LX" stack-size="1">
+    <Variable vid="20"/>
+  </Symbol>
+
+  <Symbol name="⎕NLT" stack-size="1">
+    <Variable vid="25"/>
+  </Symbol>
+
+  <Symbol name="⎕PP" stack-size="1">
+    <Variable vid="19"/>
+  </Symbol>
+
+  <Symbol name="⎕PR" stack-size="1">
+    <Variable vid="18"/>
+  </Symbol>
+
+  <Symbol name="⎕PS" stack-size="1">
+    <Variable vid="17"/>
+  </Symbol>
+
+  <Symbol name="⎕PW" stack-size="1">
+    <Variable vid="16"/>
+  </Symbol>
+
+  <Symbol name="⎕R" stack-size="1">
+    <Variable vid="24"/>
+  </Symbol>
+
+  <Symbol name="⎕RL" stack-size="1">
+    <Variable vid="15"/>
+  </Symbol>
+
+  <Symbol name="⎕SYL" stack-size="1">
+    <Variable vid="23"/>
+  </Symbol>
+
+  <Symbol name="⎕TZ" stack-size="1">
+    <Variable vid="14"/>
+  </Symbol>
+
+  <Symbol name="⍺" stack-size="1">
+    <unused-name/>
+  </Symbol>
+
+  <Symbol name="⍶" stack-size="1">
+    <unused-name/>
+  </Symbol>
+
+  <Symbol name="χ" stack-size="1">
+    <unused-name/>
+  </Symbol>
+
+  <Symbol name="λ" stack-size="1">
+    <unused-name/>
+  </Symbol>
+
+  <Symbol name="⍵" stack-size="1">
+    <unused-name/>
+  </Symbol>
+
+  <Symbol name="⍹" stack-size="1">
+    <unused-name/>
+  </Symbol>
+
+  <StateIndicator levels="0">
+  </StateIndicator>
+
+</Workspace>
+    
