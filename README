@@ -43,7 +43,7 @@ Example usage
 		1. A simple numeric vector, yielding a simple x-origin-0 graph
 			of those values.
 
-		2. An n-by-2 numeric array, yielding an XY plot of those values
+		2. An n-by-2 numeric array, yielding an XY plot of those values.
 
 		3. A vector of complex values, yielding a 3-space plot.
 
@@ -53,14 +53,14 @@ Example usage
 
 	  'options' plot a
 
-	Like above but with a semicolon list of option to control the plot.  At 
+	Like above but with a semicolon list of options to control the plot.  At 
 	the moment, three options are supported:
 
 		1. 'width <value>' where <value> is an interger plot width.
 
 		2. 'height <value>' where <value> is an interger plot height.
 
-		3. 'dims <width> <height' combining the above into one operations
+		3. 'dims <width> <height' combining the above into one operation.
 
 		Other options will be added as time goes on.
 
@@ -71,14 +71,14 @@ Example usage
 
 	The plot function spawns and detaches processes to display the plots; as
 	many plots as you like can be displayed simultaneously.  The function 
-	returns the process Id (pid) of the display processes; at some future 
+	returns the process ID (pid) of the display processes; at some future 
 	time a mechanism will be added to kill those processes; at the moment,
 	they can be killed by closing their windows.  At present, the displays
 	are created using the ImageMagick 'display' utility; right-clicking in
 	the window brings up a menu that provides a number of capabilities, 
 	including that of saving the image in a variety of formats.  (Future 
 	enhancements of the function will likely include an ability to save 
-	the plots in scalable formats.)
+	the plots in scalable, publishable, formats.)
 
 
 
