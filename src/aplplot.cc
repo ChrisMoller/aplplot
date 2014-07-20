@@ -51,6 +51,7 @@ static int plot_height = DEFAULT_PLOT_HEIGHT;
 static string xlabel;
 static string ylabel;
 static string tlabel;
+static bool killem = false;
 static int hdlr_set    = 0;
 
 static void
@@ -160,6 +161,7 @@ run_plot (PLINT count,
   if (pid == 0) {		// child
     setsid ();
     FILE *po = popen ("display /dev/stdin", "w");
+    
     plsfile (po);
     plsdev ("pngcairo");
 
@@ -177,6 +179,24 @@ run_plot (PLINT count,
     exit (0);
   }
   return (int)pid;
+}
+
+static void
+killAllChildProcess(int ppid)
+{
+  char *buff = NULL;
+  size_t len = 255;
+  char command[256] = {0};
+
+  sprintf(command,"ps -ef|awk '$3==%d {print $2}'", ppid);
+  FILE *fp = popen(command,"r");
+  while (getline (&buff, &len, fp) >= 0) {
+    long pid = atol (buff);
+    kill ((pid_t)pid, SIGTERM);
+  }	
+  free(buff);
+  fclose(fp);
+  return;
 }
 
 static Token
@@ -241,6 +261,19 @@ eval_B(Value_P B)
 	// rank error?
       }
     }else {			// real nrs
+      if (killem) {
+	/***
+	    fixme -- this is dangerous.  check to make sure it's one of
+	    our pids being killed.  (killed ppid == our ppid?)
+	 ***/
+	loop(p, count) {
+	  const Cell & cell_B = B->get_ravel(p);
+	  APL_Integer vv = cell_B.get_int_value ();
+	  killAllChildProcess ((int)vv);
+	}
+	killem = false;
+	return Token(TOK_APL_VALUE1, Value::Str0_0_P);
+      }
       if (rank == 1) {		// simple xy graph w/ 0-based indices
 	APL_Float xv, yv;
 	
@@ -367,6 +400,9 @@ handle_opts ()
   else if (0 == keyword.compare ("tlabel")) {
     if (args.size () >= 1) tlabel = args[0];
     else tlabel.erase ();
+  }
+  else if (0 == keyword.compare ("kill")) {
+    killem = true;
   }
   else {
     // fixme -- complain abt bad kwd
