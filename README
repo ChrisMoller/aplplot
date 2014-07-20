@@ -62,6 +62,14 @@ Example usage
 
 		3. 'dims <width> <height' combining the above into one operation.
 
+		4. 'xlabel <x-axis label>' where <> is a string to use as the 
+			x-axis label.  Enclosed in double-quotes ("") if the 
+			string contains spaces.
+
+		5. 'ylabel <x-axis label>' y-axis label.
+
+		6. 'tlabel <x-axis label>' top label.
+
 		Other options will be added as time goes on.
 
 		All options are retained and need not be set for subsequent plots.
