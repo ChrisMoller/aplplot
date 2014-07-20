@@ -48,9 +48,9 @@ namespace ascii = boost::spirit::ascii;
 
 static int plot_width  = DEFAULT_PLOT_WIDTH;
 static int plot_height = DEFAULT_PLOT_HEIGHT;
-static char *xlabel    = NULL;
-static char *ylabel    = NULL;
-static char *tlabel    = NULL;
+static string xlabel;
+static string ylabel;
+static string tlabel;
 static int hdlr_set    = 0;
 
 static void
@@ -168,7 +168,9 @@ run_plot (PLINT count,
     plinit ();
     plenv (min_xv, max_xv, min_yv, max_yv, 0, 0 );
 
-    pllab (xlabel, ylabel, tlabel);
+    pllab (xlabel.empty () ? "" : xlabel.c_str (),
+	   ylabel.empty () ? "" : ylabel.c_str (),
+	   tlabel.empty () ? "" : tlabel.c_str ());
     
     plline (count, xvec, yvec);
     plend ();
@@ -338,30 +340,33 @@ vector<string> args;
 static void
 handle_opts ()
 {
-#if 0
-  cerr << "keyword = \"" << keyword << "\"" << endl;
-  for (int i = 0; i < args.size (); i++)
-    cerr << "\targ[" << i << "] = \"" << args[i] << "\"" << endl;
-#endif
-
   if (keyword.empty ()) return;
   
   if (0 == keyword.compare ("width")) {
-    if (args.size () >= 1) {
+    if (args.size () >= 1)
       istringstream (args[0]) >> plot_width;
-    }
   }
   else if (0 == keyword.compare ("height")) {
-    if (args.size () >= 1) {
+    if (args.size () >= 1)
       istringstream (args[0]) >> plot_height;
-      cerr << "h set to " << plot_height << endl;
-    }
   }
   else if (0 == keyword.compare ("dims")) {
     if (args.size () >= 2) {
       istringstream (args[0]) >> plot_width;
       istringstream (args[1]) >> plot_height;
     }
+  }
+  else if (0 == keyword.compare ("xlabel")) {
+    if (args.size () >= 1) xlabel = args[0];
+    else xlabel.erase ();
+  }
+  else if (0 == keyword.compare ("ylabel")) {
+    if (args.size () >= 1) ylabel = args[0];
+    else ylabel.erase ();
+  }
+  else if (0 == keyword.compare ("tlabel")) {
+    if (args.size () >= 1) tlabel = args[0];
+    else tlabel.erase ();
   }
   else {
     // fixme -- complain abt bad kwd
@@ -416,18 +421,9 @@ eval_AB(Value_P A, Value_P B)
    if (A->is_char_string()) {
      //const ShapeItem count    = A->element_count();
      //const UCS_string ustr    = A->get_UCS_ravel();		// unicode
-     /***
-	 A->remove_trailing_padchars()
-	 A->remove_copy_black()			// strip leading/trailing ws
-	 A->drop(int drop_count)			// drop first
-	 A->remove_pad()
-	 A->remove_lt_spaces()
-	 A->atoi()
-	 A->compare("mmm", ?)
-     ***/
+     //const Rank       rank    = A->get_rank();
+     
      const string     sstr    = A->get_UCS_ravel().to_string (); // utf8
-     //const char      *cstr    = sstr.c_str ();
-     //const Rank	     rank    = A->get_rank();
 
      using boost::spirit::ascii::space;
      typedef string::const_iterator iterator_type;

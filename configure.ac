@@ -10,7 +10,7 @@ AM_PROG_AR
 AM_PROG_LIBTOOL
 
 # this has to point into the GNU apl source tree
-APL_SOURCES=-I../../apl-1.3/src/native
+APL_SOURCES=-I../../../apl-1.3/src/native
 AC_SUBST(APL_SOURCES)
 
 AC_CHECK_PROG([IMG_DISPLAY], [display], [yes], [])
