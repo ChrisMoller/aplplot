@@ -187,19 +187,111 @@ run_plot (PLINT count,
 static void
 killAllChildProcess(int ppid)
 {
-  char *buff = NULL;
-  size_t len = 255;
-  char command[256] = {0};
+  /*****
+	Thanks to sundq on stackoverflow for this.  (Maybe someday I'll get
+	around to writing getcpid() to compliment getpid() and getppid().
+   *****/
 
-  sprintf(command,"ps -ef|awk '$3==%d {print $2}'", ppid);
-  FILE *fp = popen(command,"r");
-  while (getline (&buff, &len, fp) >= 0) {
-    long pid = atol (buff);
-    kill ((pid_t)pid, SIGTERM);
-  }	
-  free(buff);
-  fclose(fp);
+  char *command = NULL;
+
+  asprintf(&command, "ps -ef|awk '$3==%d {print $2}'", ppid);
+  if (command) {
+    FILE *fp = popen(command,"r");
+    if (fp) {
+      char *buff = NULL;
+      size_t len = 255;
+      while (getline (&buff, &len, fp) >= 0) {
+	long pid = atol (buff);
+	kill ((pid_t)pid, SIGTERM);
+      }
+      fclose(fp);
+      if (buff) free(buff);
+    }
+    free(command);
+  }
   return;
+}
+
+static int
+plot_xy (ShapeItem xcol, ShapeItem ycol, Value_P B)
+{
+  int pid = -1;
+  APL_Float xv, yv;
+
+  ShapeItem rows = B->get_rows();
+  ShapeItem cols = B->get_cols();
+	
+  APL_Float min_xv =  MAXDOUBLE;
+  APL_Float max_xv = -MAXDOUBLE;
+  APL_Float min_yv =  MAXDOUBLE;
+  APL_Float max_yv = -MAXDOUBLE;
+
+  PLFLT *xvec = new PLFLT[(int)rows];
+  PLFLT *yvec = new PLFLT[(int)rows];
+
+  loop(p, rows) {
+    ShapeItem x_offset = xcol + p * cols;
+    ShapeItem y_offset = ycol + p * cols;
+    
+    const Cell & cell_Bx = B->get_ravel (x_offset);
+    const Cell & cell_By = B->get_ravel (y_offset);
+    xv = cell_Bx.get_real_value ();
+    yv = cell_By.get_real_value ();
+
+    if (min_xv > xv) min_xv = xv;
+    if (max_xv < xv) max_xv = xv;
+    if (min_yv > yv) min_yv = yv;
+    if (max_yv < yv) max_yv = yv;
+	  
+    xvec[p] = xv;
+    yvec[p] = yv;
+  }
+
+  pid = run_plot ((PLINT)rows, min_xv, max_xv, min_yv, max_yv,
+		  xvec, yvec);
+  
+  delete [] xvec;
+  delete [] yvec;
+  
+  return pid;
+}
+
+static int
+plot_y (Value_P B)
+{
+  int pid = -1;
+  APL_Float xv, yv;
+	
+  APL_Float min_xv =  MAXDOUBLE;
+  APL_Float max_xv = -MAXDOUBLE;
+  APL_Float min_yv =  MAXDOUBLE;
+  APL_Float max_yv = -MAXDOUBLE;
+
+  PLFLT *xvec = new PLFLT[B->element_count ()];
+  PLFLT *yvec = new PLFLT[B->element_count ()];
+	  
+  loop(p, B->element_count ()) {
+    const Cell & cell_B = B->get_ravel(p);
+    xv = (APL_Float)p;
+    yv = cell_B.get_real_value ();
+    
+    if (min_xv > xv) min_xv = xv;
+    if (max_xv < xv) max_xv = xv;
+    if (min_yv > yv) min_yv = yv;
+    if (max_yv < yv) max_yv = yv;
+    
+    xvec[p] = xv;
+    yvec[p] = yv;
+  }
+
+  pid = run_plot ((PLINT)(B->element_count ()),
+		  min_xv, max_xv, min_yv, max_yv,
+		  xvec, yvec);
+  
+  delete [] xvec;
+  delete [] yvec;
+  
+  return pid;
 }
 
 static Token
@@ -263,7 +355,7 @@ eval_B(Value_P B)
       else {	// don't know yet
 	// rank error?
       }
-    }else {			// real nrs
+    } else {			// real nrs
       if (killem) {
 	/***
 	    fixme -- this is dangerous.  check to make sure it's one of
@@ -277,85 +369,16 @@ eval_B(Value_P B)
 	killem = false;
 	return Token(TOK_APL_VALUE1, Value::Str0_0_P);
       }
-      if (rank == 1) {		// simple xy graph w/ 0-based indices
-	APL_Float xv, yv;
-	
-	APL_Float min_xv =  MAXDOUBLE;
-	APL_Float max_xv = -MAXDOUBLE;
-	APL_Float min_yv =  MAXDOUBLE;
-	APL_Float max_yv = -MAXDOUBLE;
-
-	PLFLT *xvec = new PLFLT[count];
-	PLFLT *yvec = new PLFLT[count];
-	  
-	loop(p, count) {
-	  const Cell & cell_B = B->get_ravel(p);
-	  xv = (APL_Float)p;
-	  yv = cell_B.get_real_value ();
-
-	  if (min_xv > xv) min_xv = xv;
-	  if (max_xv < xv) max_xv = xv;
-	  if (min_yv > yv) min_yv = yv;
-	  if (max_yv < yv) max_yv = yv;
-	  
-	  xvec[p] = xv;
-	  yvec[p] = yv;
-	}
-
-	pid = run_plot ((PLINT)count, min_xv, max_xv, min_yv, max_yv,
-			xvec, yvec);
-
-	delete [] xvec;
-	delete [] yvec;
-      } 
-      else if (rank == 2) {	// simple xy graph
-	// fixme -- try get_last_shape_item()
-	if (B->get_shape_item(1) == 2) {  // [m 2]: x y, x y, ...
-	  APL_Float xv, yv;
-	
-	  APL_Float min_xv =  MAXDOUBLE;
-	  APL_Float max_xv = -MAXDOUBLE;
-	  APL_Float min_yv =  MAXDOUBLE;
-	  APL_Float max_yv = -MAXDOUBLE;
-
-	  const ShapeItem halfcount = count / 2;
-	  
-	  PLFLT *xvec = new PLFLT[halfcount];
-	  PLFLT *yvec = new PLFLT[halfcount];
-
-	  loop(p, halfcount) {
-	    // xvecs will be even indices
-	    // yvecs will be odd  indices
-	  
-	    const Cell & cell_Bx = B->get_ravel(2 * p);
-	    const Cell & cell_By = B->get_ravel(2 * p + 1);
-	    xv = cell_Bx.get_real_value ();
-	    yv = cell_By.get_real_value ();
-
-	    if (min_xv > xv) min_xv = xv;
-	    if (max_xv < xv) max_xv = xv;
-	    if (min_yv > yv) min_yv = yv;
-	    if (max_yv < yv) max_yv = yv;
-	  
-	    xvec[p] = xv;
-	    yvec[p] = yv;
-	  }
-
-	  pid = run_plot ((PLINT)halfcount, min_xv, max_xv, min_yv, max_yv,
-			  xvec, yvec);
-
-	  delete [] xvec;
-	  delete [] yvec;
-	}
-	// fixme -- try get_last_shape_item()
-	else if (B->get_shape_item(1) == 3) {  // [m 3]:  x y z, x y z, ...
-	}
-	else {			// [m n]: don't know yet
-	// rank error?		// see Value.hh for rows cols
-	}
-      }
-      else {			// [l m n...]:  don't know yet
-	// rank error?
+      switch (rank) {
+      case 1:			// simple xy graph w/ 0-based indices
+	pid = plot_y (B);
+	break;
+      case 2:			// xy graph
+	if (B->get_cols() == 1) pid = plot_y (B);
+	if (B->get_cols() >= 2) pid = plot_xy (0, 1, B);
+	break;
+      default:			// multi dimensional 
+	break;
       }
     }
   }
@@ -377,6 +400,16 @@ static void
 handle_opts ()
 {
   if (keyword.empty ()) return;
+
+  /***
+      TODO:
+
+      finish/fix log scales
+      
+      xy 0:1 0:2 ...
+      polar 0:1 0:2 ...
+      bar 0:1 0:2
+   ***/
   
   if (0 == keyword.compare ("width")) {
     if (args.size () >= 1)
