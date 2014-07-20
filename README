@@ -71,6 +71,11 @@ Example usage
 
 		6. 'tlabel <x-axis label>' top label.
 
+		7. 'kill' The plot function returns the process ID (pid) of the 
+			process used to display the plot.  Given a right argument
+			of those pids, the function kills those processes and 
+			closes the display windows.
+
 		Other options will be added as time goes on.
 
 		All options are retained and need not be set for subsequent plots.
@@ -79,12 +84,9 @@ Example usage
 
 
 	The plot function spawns and detaches processes to display the plots; as
-	many plots as you like can be displayed simultaneously.  The function 
-	returns the process ID (pid) of the display processes; at some future 
-	time a mechanism will be added to kill those processes; at the moment,
-	they can be killed by closing their windows.  At present, the displays
-	are created using the ImageMagick 'display' utility; right-clicking in
-	the window brings up a menu that provides a number of capabilities, 
+	many plots as you like can be displayed simultaneously.  At present, the 
+	displays are created using the ImageMagick 'display' utility; right-clicking 
+	in the window brings up a menu that provides a number of capabilities, 
 	including that of saving the image in a variety of formats.  (Future 
 	enhancements of the function will likely include an ability to save 
 	the plots in scalable, publishable, formats.)
