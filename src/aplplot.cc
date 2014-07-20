@@ -51,6 +51,8 @@ static int plot_height = DEFAULT_PLOT_HEIGHT;
 static string xlabel;
 static string ylabel;
 static string tlabel;
+static bool xlog = false;
+static bool ylog = false;
 static bool killem = false;
 static int hdlr_set    = 0;
 
@@ -168,7 +170,8 @@ run_plot (PLINT count,
     //       xdpi  ydpi xlen   ylen   xoff yoff
     plspage (0.0,  0.0, plot_width, plot_height, 0.0, 0.0);
     plinit ();
-    plenv (min_xv, max_xv, min_yv, max_yv, 0, 0 );
+    plenv (min_xv, max_xv, min_yv, max_yv, 0,
+	   (xlog ? 10 : 0) + (ylog ? 20 : 0));
 
     pllab (xlabel.empty () ? "" : xlabel.c_str (),
 	   ylabel.empty () ? "" : ylabel.c_str (),
@@ -403,6 +406,14 @@ handle_opts ()
   }
   else if (0 == keyword.compare ("kill")) {
     killem = true;
+  }
+  else if (0 == keyword.compare ("xlog")) {
+    xlog = (args.size () >= 1 && 0 == args[0].compare ("on"))
+      ? true : false;
+  }
+  else if (0 == keyword.compare ("ylog")) {
+    ylog = (args.size () >= 1 && 0 == args[0].compare ("on"))
+      ? true : false;
   }
   else {
     // fixme -- complain abt bad kwd
