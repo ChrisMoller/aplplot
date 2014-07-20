@@ -64,7 +64,8 @@ Example usage
 
 		4. 'xlabel <x-axis label>' where <> is a string to use as the 
 			x-axis label.  Enclosed in double-quotes ("") if the 
-			string contains spaces.
+			string contains spaces.  If the argument is omitted,
+			the label is cleared.
 
 		5. 'ylabel <x-axis label>' y-axis label.
 
