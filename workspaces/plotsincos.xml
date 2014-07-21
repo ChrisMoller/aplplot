@@ -99,7 +99,7 @@
          timezone is offset to UTC in seconds.
          local time is UTC + offset -->
 <Workspace wsid="plotsincos" year="2014" month="7" day="21"
-           hour="4" minute="55" second="44" timezone="-14400">
+           hour="6" minute="1" second="40" timezone="-14400">
 
   <Value flg="400" vid="0" parent="-1" rk="1" sh-0="8"/>
   <Value flg="400" vid="1" parent="-1" rk="0"/>
@@ -288,7 +288,7 @@
           ²'xcol 0; tlabel ¹22²Lissajous axis 0¹22²' plot ¹2349²2 128¹2374²s,⁰
           ²c¹A
           ²'xcol -1; tlabel ¹22²sin and cos¹22²' plot ¹2349²2 128¹2374²s,c¹A
-          ²p¹2190²s¹D7²c¹A
+          ²p ¹2190²s¹D7²c¹A
           ²'tlabel ¹22²Product of sin and cos¹22²' plot p¹A
           ²'ylog on; tlabel ¹22²y = 2^x¹22²' plot 2¹22C6²((¹2373²100)¹F7²10)¹A
           ²'ylog off' plot ''¹A
