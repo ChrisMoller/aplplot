@@ -252,12 +252,13 @@ plot_xy (ShapeItem pxcol, Value_P B)
       if (pxcol != -1) {
 	const Cell & cell_Bx = B->get_ravel (pxcol + p * cols);
 	xv = cell_Bx.get_real_value ();
+	if (xlog) xv = log (xv);
       }
-      else {
-	xv = (APL_Float)p;
-      }
+      else xv = (APL_Float)p;
+      
       const Cell & cell_By = B->get_ravel (q + p * cols);
       yv = cell_By.get_real_value ();
+      if (ylog) yv = log (yv);
 
       if (min_xv > xv) min_xv = xv;
       if (max_xv < xv) max_xv = xv;
@@ -302,6 +303,7 @@ plot_y (Value_P B)
     const Cell & cell_B = B->get_ravel(p);
     xv = (APL_Float)p;
     yv = cell_B.get_real_value ();
+    if (ylog) yv = log (yv);
     
     if (min_xv > xv) min_xv = xv;
     if (max_xv < xv) max_xv = xv;
@@ -476,13 +478,13 @@ handle_opts ()
   else if (0 == keyword.compare ("kill")) {
     killem = true;
   }
-  else if (0 == keyword.compare ("xlog")) {
-    xlog = (args.size () >= 1 && 0 == args[0].compare ("on"))
-      ? true : false;
+  else if (0 == keyword.compare ("xlog") || 0 == keyword.compare ("logx")) {
+    xlog = (args.size () >= 1 && 0 == args[0].compare ("off"))
+      ? false : true;
   }
-  else if (0 == keyword.compare ("ylog")) {
-    ylog = (args.size () >= 1 && 0 == args[0].compare ("on"))
-      ? true : false;
+  else if (0 == keyword.compare ("ylog") || 0 == keyword.compare ("logy")) {
+    ylog = (args.size () >= 1 && 0 == args[0].compare ("off"))
+      ? false : true;
   }
   else if (0 == keyword.compare ("xcol")) {
     if (args.size () >= 1)

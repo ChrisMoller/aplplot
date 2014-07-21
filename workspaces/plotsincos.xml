@@ -99,20 +99,20 @@
          timezone is offset to UTC in seconds.
          local time is UTC + offset -->
 <Workspace wsid="plotsincos" year="2014" month="7" day="21"
-           hour="0" minute="40" second="52" timezone="-14400">
+           hour="4" minute="55" second="44" timezone="-14400">
 
-  <Value flg="400" vid="0" parent="-1" rk="1" sh-0="16"/>
-  <Value flg="400" vid="1" parent="-1" rk="1" sh-0="2"/>
-  <Value flg="400" vid="2" parent="-1" rk="1" sh-0="2"/>
-  <Value flg="400" vid="3" parent="-1" rk="1" sh-0="25"/>
-  <Value flg="400" vid="4" parent="-1" rk="1" sh-0="2"/>
-  <Value flg="400" vid="5" parent="-1" rk="1" sh-0="23"/>
+  <Value flg="400" vid="0" parent="-1" rk="1" sh-0="8"/>
+  <Value flg="400" vid="1" parent="-1" rk="0"/>
+  <Value flg="400" vid="2" parent="-1" rk="0"/>
+  <Value flg="400" vid="3" parent="-1" rk="0"/>
+  <Value flg="400" vid="4" parent="-1" rk="1" sh-0="25"/>
+  <Value flg="400" vid="5" parent="-1" rk="1" sh-0="31"/>
   <Value flg="400" vid="6" parent="-1" rk="1" sh-0="2"/>
-  <Value flg="400" vid="7" parent="-1" rk="1" sh-0="23"/>
-  <Value flg="400" vid="8" parent="-1" rk="0"/>
-  <Value flg="400" vid="9" parent="-1" rk="0"/>
-  <Value flg="400" vid="10" parent="-1" rk="0"/>
-  <Value flg="400" vid="11" parent="-1" rk="0"/>
+  <Value flg="400" vid="7" parent="-1" rk="1" sh-0="29"/>
+  <Value flg="400" vid="8" parent="-1" rk="1" sh-0="2"/>
+  <Value flg="400" vid="9" parent="-1" rk="1" sh-0="33"/>
+  <Value flg="400" vid="10" parent="-1" rk="1" sh-0="2"/>
+  <Value flg="400" vid="11" parent="-1" rk="1" sh-0="33"/>
   <Value flg="400" vid="12" parent="-1" rk="0"/>
   <Value flg="400" vid="13" parent="-1" rk="0"/>
   <Value flg="400" vid="14" parent="-1" rk="0"/>
@@ -120,60 +120,68 @@
   <Value flg="400" vid="16" parent="-1" rk="0"/>
   <Value flg="400" vid="17" parent="-1" rk="0"/>
   <Value flg="400" vid="18" parent="-1" rk="0"/>
-  <Value flg="400" vid="19" parent="-1" rk="1" sh-0="1"/>
+  <Value flg="400" vid="19" parent="-1" rk="0"/>
   <Value flg="400" vid="20" parent="-1" rk="0"/>
-  <Value flg="400" vid="21" parent="-1" rk="1" sh-0="0"/>
+  <Value flg="400" vid="21" parent="-1" rk="0"/>
   <Value flg="400" vid="22" parent="-1" rk="0"/>
-  <Value flg="400" vid="23" parent="-1" rk="0"/>
-  <Value flg="400" vid="24" parent="-1" rk="1" sh-0="128"/>
-  <Value flg="400" vid="25" parent="-1" rk="0"/>
+  <Value flg="400" vid="23" parent="-1" rk="1" sh-0="1"/>
+  <Value flg="400" vid="24" parent="-1" rk="0"/>
+  <Value flg="400" vid="25" parent="-1" rk="1" sh-0="0"/>
   <Value flg="400" vid="26" parent="-1" rk="0"/>
   <Value flg="400" vid="27" parent="-1" rk="0"/>
-  <Value flg="400" vid="28" parent="-1" rk="0"/>
+  <Value flg="400" vid="28" parent="-1" rk="1" sh-0="128"/>
   <Value flg="400" vid="29" parent="-1" rk="0"/>
   <Value flg="400" vid="30" parent="-1" rk="0"/>
   <Value flg="400" vid="31" parent="-1" rk="0"/>
-  <Value flg="400" vid="32" parent="-1" rk="1" sh-0="128"/>
+  <Value flg="400" vid="32" parent="-1" rk="0"/>
   <Value flg="400" vid="33" parent="-1" rk="0"/>
   <Value flg="400" vid="34" parent="-1" rk="0"/>
-  <Value flg="400" vid="35" parent="-1" rk="1" sh-0="1"/>
-  <Value flg="400" vid="36" parent="-1" rk="0"/>
-  <Value flg="400" vid="37" parent="-1" rk="1" sh-0="6"/>
+  <Value flg="400" vid="35" parent="-1" rk="0"/>
+  <Value flg="400" vid="36" parent="-1" rk="1" sh-0="128"/>
+  <Value flg="400" vid="37" parent="-1" rk="0"/>
   <Value flg="400" vid="38" parent="-1" rk="0"/>
-  <Value flg="400" vid="39" parent="-1" rk="0"/>
+  <Value flg="400" vid="39" parent="-1" rk="1" sh-0="1"/>
   <Value flg="400" vid="40" parent="-1" rk="0"/>
-  <Value flg="400" vid="41" parent="-1" rk="1" sh-0="3"/>
+  <Value flg="400" vid="41" parent="-1" rk="1" sh-0="6"/>
   <Value flg="400" vid="42" parent="-1" rk="0"/>
   <Value flg="400" vid="43" parent="-1" rk="0"/>
   <Value flg="400" vid="44" parent="-1" rk="0"/>
-  <Value flg="400" vid="45" parent="-1" rk="1" sh-0="256"/>
-  <Value flg="400" vid="46" parent="-1" rk="1" sh-0="4"/>
-  <Value flg="400" vid="47" parent="-1" rk="1" sh-0="21"/>
-  <Ravel vid="0" cells="²tlabel ¹22²product¹22"/>
-  <Ravel vid="1" cells="³3³128"/>
-  <Ravel vid="2" cells="³2³128"/>
-  <Ravel vid="3" cells="²xcol -1; tlabel ¹22²axis -1¹22"/>
-  <Ravel vid="4" cells="³2³128"/>
-  <Ravel vid="5" cells="²xcol 0; tlabel ¹22²axis 0¹22"/>
+  <Value flg="400" vid="45" parent="-1" rk="1" sh-0="3"/>
+  <Value flg="400" vid="46" parent="-1" rk="0"/>
+  <Value flg="400" vid="47" parent="-1" rk="0"/>
+  <Value flg="400" vid="48" parent="-1" rk="0"/>
+  <Value flg="400" vid="49" parent="-1" rk="1" sh-0="256"/>
+  <Value flg="400" vid="50" parent="-1" rk="1" sh-0="4"/>
+  <Value flg="400" vid="51" parent="-1" rk="1" sh-0="21"/>
+  <Ravel vid="0" cells="²ylog off"/>
+  <Ravel vid="1" cells="³10"/>
+  <Ravel vid="2" cells="³100"/>
+  <Ravel vid="3" cells="³2"/>
+  <Ravel vid="4" cells="²ylog on; tlabel ¹22²y = 2^x¹22"/>
+  <Ravel vid="5" cells="²tlabel ¹22²Product of sin and cos¹22"/>
   <Ravel vid="6" cells="³2³128"/>
-  <Ravel vid="7" cells="²xcol 1; tlabel ¹22²axis 1¹22"/>
-  <Ravel vid="8" cells="³6"/>
-  <Ravel vid="9" cells="³128"/>
-  <Ravel vid="10" cells="³2"/>
-  <Ravel vid="11" cells="³1"/>
+  <Ravel vid="7" cells="²xcol -1; tlabel ¹22²sin and cos¹22"/>
+  <Ravel vid="8" cells="³2³128"/>
+  <Ravel vid="9" cells="²xcol 0; tlabel ¹22²Lissajous axis 0¹22"/>
+  <Ravel vid="10" cells="³2³128"/>
+  <Ravel vid="11" cells="²xcol 1; tlabel ¹22²Lissajous axis 1¹22"/>
   <Ravel vid="12" cells="³6"/>
   <Ravel vid="13" cells="³128"/>
   <Ravel vid="14" cells="³2"/>
-  <Ravel vid="15" cells="³-4"/>
-  <Ravel vid="16" cells="³1"/>
-  <Ravel vid="17" cells="³80"/>
-  <Ravel vid="18" cells="³0"/>
-  <Ravel vid="19" cells="² "/>
-  <Ravel vid="20" cells="³10"/>
-  <Ravel vid="21" cells="² "/>
-  <Ravel vid="22" cells="³1"/>
-  <Ravel vid="23" cells="⁴1e-13"/>
-  <Ravel vid="24" cells="⁴0.327195⁴0.61837⁴0.841471⁴0.971938⁴0.995408⁴0.909297
+  <Ravel vid="15" cells="³1"/>
+  <Ravel vid="16" cells="³6"/>
+  <Ravel vid="17" cells="³128"/>
+  <Ravel vid="18" cells="³2"/>
+  <Ravel vid="19" cells="³-4"/>
+  <Ravel vid="20" cells="³1"/>
+  <Ravel vid="21" cells="³80"/>
+  <Ravel vid="22" cells="³0"/>
+  <Ravel vid="23" cells="² "/>
+  <Ravel vid="24" cells="³10"/>
+  <Ravel vid="25" cells="² "/>
+  <Ravel vid="26" cells="³1"/>
+  <Ravel vid="27" cells="⁴1e-13"/>
+  <Ravel vid="28" cells="⁴0.327195⁴0.61837⁴0.841471⁴0.971938⁴0.995408⁴0.909297
     ⁴0.723086⁴0.457273⁴0.14112⁴-0.190568⁴-0.501277⁴-0.756802⁴-0.929015
     ⁴-0.998955⁴-0.958924⁴-0.813329⁴-0.578198⁴-0.279415⁴0.050127⁴0.374151
     ⁴0.656987⁴0.867497⁴0.982508⁴0.989358⁴0.887294⁴0.687551⁴0.412118⁴0.0913172
@@ -191,14 +199,14 @@
     ⁴-0.858555⁴-0.643538⁴-0.357676⁴-0.0324395⁴0.296369⁴0.592551⁴0.823501
     ⁴0.963795⁴0.997989⁴0.922318⁴0.745113⁴0.485881⁴0.173161⁴-0.158623⁴-0.472944
     ⁴-0.7352⁴-0.916522⁴-0.996946⁴-0.967621"/>
-  <Ravel vid="25" cells="⁵0J1"/>
-  <Ravel vid="26" cells="³6"/>
-  <Ravel vid="27" cells="³128"/>
-  <Ravel vid="28" cells="³1"/>
-  <Ravel vid="29" cells="³6"/>
-  <Ravel vid="30" cells="³128"/>
-  <Ravel vid="31" cells="³2"/>
-  <Ravel vid="32" cells="⁴0.986143⁴0.944957⁴0.877583⁴0.785887⁴0.672412
+  <Ravel vid="29" cells="⁵0J1"/>
+  <Ravel vid="30" cells="³6"/>
+  <Ravel vid="31" cells="³128"/>
+  <Ravel vid="32" cells="³1"/>
+  <Ravel vid="33" cells="³6"/>
+  <Ravel vid="34" cells="³128"/>
+  <Ravel vid="35" cells="³2"/>
+  <Ravel vid="36" cells="⁴0.986143⁴0.944957⁴0.877583⁴0.785887⁴0.672412
     ⁴0.540302⁴0.393219⁴0.235238⁴0.0707372⁴-0.0957235⁴-0.259531⁴-0.416147
     ⁴-0.561229⁴-0.690758⁴-0.801144⁴-0.889327⁴-0.952863⁴-0.989992⁴-0.999686
     ⁴-0.981674⁴-0.936457⁴-0.865287⁴-0.770137⁴-0.653644⁴-0.519036⁴-0.370043
@@ -216,20 +224,20 @@
     ⁴0.86969⁴0.939525⁴0.983322⁴0.999868⁴0.988705⁴0.95014⁴0.885244⁴0.795815
     ⁴0.684331⁴0.553881⁴0.408082⁴0.250973⁴0.0869091⁴-0.0795636⁴-0.243831
     ⁴-0.401342⁴-0.547729⁴-0.678937⁴-0.79133"/>
-  <Ravel vid="33" cells="³0"/>
-  <Ravel vid="34" cells="³0"/>
-  <Ravel vid="35" cells="²C"/>
-  <Ravel vid="36" cells="³0"/>
-  <Ravel vid="37" cells="².,¹22C6²0_¹AF"/>
+  <Ravel vid="37" cells="³0"/>
   <Ravel vid="38" cells="³0"/>
-  <Ravel vid="39" cells="³1"/>
+  <Ravel vid="39" cells="²C"/>
   <Ravel vid="40" cells="³0"/>
-  <Ravel vid="41" cells="¹8¹D¹A
-    "/>
+  <Ravel vid="41" cells="².,¹22C6²0_¹AF"/>
   <Ravel vid="42" cells="³0"/>
-  <Ravel vid="43" cells="³0"/>
+  <Ravel vid="43" cells="³1"/>
   <Ravel vid="44" cells="³0"/>
-  <Ravel vid="45" cells="¹0¹1¹2¹3¹4¹5¹6¹7¹8¹9¹A
+  <Ravel vid="45" cells="¹8¹D¹A
+    "/>
+  <Ravel vid="46" cells="³0"/>
+  <Ravel vid="47" cells="³0"/>
+  <Ravel vid="48" cells="³0"/>
+  <Ravel vid="49" cells="¹0¹1¹2¹3¹4¹5¹6¹7¹8¹9¹A
     ¹B¹C¹D¹E¹F¹10¹11¹12¹13¹14¹15¹16¹17¹18¹19¹1A¹1B¹1C¹1D¹1E¹1F² !¹22²#$%¹26²'⁰
     ²()*+,-./0123456789:;¹3C²=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijkl⁰
     ²mnopqrstuvwxyz{|}~¹7F¹A5¹20AC¹21C4¹2227¹223C¹226C¹22C6¹22F8¹2338¹233A
@@ -242,11 +250,11 @@
     ¹237A¹2379¹2282¹2283¹235D¹2372¹2374¹2371¹233D¹2296¹25CB¹2228¹2373¹2349
     ¹2208¹2229¹233F¹2340¹2265¹2264¹2260¹D7¹F7¹2359¹2218¹2375¹236B¹234B¹2352¹AF
     ¹A8¹A0"/>
-  <Ravel vid="46" cells="³-1³0³0³0"/>
-  <Ravel vid="47" cells="²SystemVariable.cc:747"/>
+  <Ravel vid="50" cells="³-1³0³0³0"/>
+  <Ravel vid="51" cells="²SystemVariable.cc:747"/>
   <SymbolTable size="14">
     <Symbol name="c" stack-size="1">
-      <Variable vid="32"/>
+      <Variable vid="36"/>
     </Symbol>
 
     <Symbol name="p" stack-size="1">
@@ -275,12 +283,15 @@
         <UCS uni="²plotsincos;c;s;p;q¹A
           ²c¹2190²2¹25CB²(¹2373²128)¹F7²6¹A
           ²s¹2190²1¹25CB²2¹D7²(¹2373²128)¹F7²6¹A
-          ²'xcol 1; tlabel ¹22²axis 1¹22²' plot ¹2349²2 128¹2374²s,c¹A
-          ²'xcol 0; tlabel ¹22²axis 0¹22²' plot ¹2349²2 128¹2374²s,c¹A
-          ²'xcol -1; tlabel ¹22²axis -1¹22²' plot ¹2349²2 128¹2374²s,c¹A
+          ²'xcol 1; tlabel ¹22²Lissajous axis 1¹22²' plot ¹2349²2 128¹2374²s,⁰
+          ²c¹A
+          ²'xcol 0; tlabel ¹22²Lissajous axis 0¹22²' plot ¹2349²2 128¹2374²s,⁰
+          ²c¹A
+          ²'xcol -1; tlabel ¹22²sin and cos¹22²' plot ¹2349²2 128¹2374²s,c¹A
           ²p¹2190²s¹D7²c¹A
-          ²q¹2190¹2349²3 128¹2374²s,c,p¹A
-          ²'tlabel ¹22²product¹22²' plot p¹A
+          ²'tlabel ¹22²Product of sin and cos¹22²' plot p¹A
+          ²'ylog on; tlabel ¹22²y = 2^x¹22²' plot 2¹22C6²((¹2373²100)¹F7²10)¹A
+          ²'ylog off' plot ''¹A
           "/>
       </Function>
     </Symbol>
@@ -290,7 +301,7 @@
     </Symbol>
 
     <Symbol name="s" stack-size="1">
-      <Variable vid="24"/>
+      <Variable vid="28"/>
     </Symbol>
 
     <Symbol name="z" stack-size="1">
@@ -324,7 +335,7 @@
   </SymbolTable>
 
   <Symbol name="⎕AI" stack-size="1">
-    <Variable vid="46"/>
+    <Variable vid="50"/>
   </Symbol>
 
   <Symbol name="⎕ARG" stack-size="1">
@@ -332,7 +343,7 @@
   </Symbol>
 
   <Symbol name="⎕AV" stack-size="1">
-    <Variable vid="45"/>
+    <Variable vid="49"/>
   </Symbol>
 
   <Symbol name="⎕EM" stack-size="1">
@@ -344,87 +355,87 @@
   </Symbol>
 
   <Symbol name="⎕LC" stack-size="1">
-    <Variable vid="44"/>
+    <Variable vid="48"/>
   </Symbol>
 
   <Symbol name="⎕PT" stack-size="1">
-    <Variable vid="43"/>
+    <Variable vid="47"/>
   </Symbol>
 
   <Symbol name="⎕SVE" stack-size="1">
-    <Variable vid="42"/>
+    <Variable vid="46"/>
   </Symbol>
 
   <Symbol name="⎕TC" stack-size="1">
-    <Variable vid="41"/>
+    <Variable vid="45"/>
   </Symbol>
 
   <Symbol name="⎕TS" stack-size="1">
-    <Variable vid="40"/>
+    <Variable vid="44"/>
   </Symbol>
 
   <Symbol name="⎕UL" stack-size="1">
-    <Variable vid="39"/>
+    <Variable vid="43"/>
   </Symbol>
 
   <Symbol name="⎕WA" stack-size="1">
-    <Variable vid="38"/>
+    <Variable vid="42"/>
   </Symbol>
 
   <Symbol name="⎕CT" stack-size="1">
-    <Variable vid="23"/>
+    <Variable vid="27"/>
   </Symbol>
 
   <Symbol name="⎕FC" stack-size="1">
-    <Variable vid="37"/>
+    <Variable vid="41"/>
   </Symbol>
 
   <Symbol name="⎕IO" stack-size="1">
-    <Variable vid="22"/>
+    <Variable vid="26"/>
   </Symbol>
 
   <Symbol name="⎕L" stack-size="1">
-    <Variable vid="36"/>
+    <Variable vid="40"/>
   </Symbol>
 
   <Symbol name="⎕LX" stack-size="1">
-    <Variable vid="21"/>
+    <Variable vid="25"/>
   </Symbol>
 
   <Symbol name="⎕NLT" stack-size="1">
-    <Variable vid="35"/>
+    <Variable vid="39"/>
   </Symbol>
 
   <Symbol name="⎕PP" stack-size="1">
-    <Variable vid="20"/>
+    <Variable vid="24"/>
   </Symbol>
 
   <Symbol name="⎕PR" stack-size="1">
-    <Variable vid="19"/>
+    <Variable vid="23"/>
   </Symbol>
 
   <Symbol name="⎕PS" stack-size="1">
-    <Variable vid="18"/>
+    <Variable vid="22"/>
   </Symbol>
 
   <Symbol name="⎕PW" stack-size="1">
-    <Variable vid="17"/>
+    <Variable vid="21"/>
   </Symbol>
 
   <Symbol name="⎕R" stack-size="1">
-    <Variable vid="34"/>
+    <Variable vid="38"/>
   </Symbol>
 
   <Symbol name="⎕RL" stack-size="1">
-    <Variable vid="16"/>
+    <Variable vid="20"/>
   </Symbol>
 
   <Symbol name="⎕SYL" stack-size="1">
-    <Variable vid="33"/>
+    <Variable vid="37"/>
   </Symbol>
 
   <Symbol name="⎕TZ" stack-size="1">
-    <Variable vid="15"/>
+    <Variable vid="19"/>
   </Symbol>
 
   <Symbol name="⍺" stack-size="1">

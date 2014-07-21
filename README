@@ -56,11 +56,15 @@ Example usage
 	Like above but with a semicolon list of options to control the plot.  At 
 	the moment, three options are supported:
 
-		 1. 'width <value>' where <value> is an interger plot width.
+		 1. 'width <value>' where <value> is an interger plot width.  If
+		       the argument is omitted, the option is ignored.
 
 		 2. 'height <value>' where <value> is an interger plot height.
+		       If the argument is omitted, the option is ignored.
 
-		 3. 'dims <width> <height' combining the above into one operation.
+		 3. 'dims <width> <height' combining the above into one
+		    	operation.  If either argument is omitted, the option
+			is ignored.
 
 		 4. 'xlabel <x-axis label>' where <> is a string to use as the 
 			x-axis label.  Enclosed in double-quotes ("") if the 
@@ -71,35 +75,35 @@ Example usage
 
 		 6. 'tlabel <x-axis label>' top label.
 
-		 7. 'kill' The plot function returns the process ID (pid) of the 
-			process used to display the plot.  Given a right argument
-			of those pids, the function kills those processes and 
-			closes the display windows.
+		 7. 'kill' The plot function returns the process ID (pid) of
+		        the process used to display the plot.  Given a right
+			argument of those pids, the function kills those
+			processes and closes the display windows.
 
-		 8. 'xlog <state>'  If the <state> is "on," make the x-axis 
-			logarithmic.  If the state is omitted or of any other 
-			value, make the x axis linear.
+		 8. 'xlog <state>'  If the <state> is "on" or omitted, make
+		        the x-axis logarithmic.  If the state is "off," make
+			the x axis linear.  "logx" is a synonym for "xlog."
 
 		 9. 'ylog <state>'  See the xlog option.
 
 		10. 'xcol <column>'  Given a multi-column right argument, sets
-			which column to use as the x values.  If set to -1 or if 
-			the argument is omitted, an x-axis is synthesized.
+			which column to use as the x values.  If set to -1 or
+			if the argument is omitted, an x-axis is synthesized.
 
 		Other options will be added as time goes on.
 
-		All options are retained and need not be set for subsequent plots.
-		'options' plot '' can be used to store options without creating a 
-		plot.
+		All options except "kill" are retained and need not be set for
+		subsequent plots. 'options' plot '' can be used to store
+		options without creating a plot.
 
 
-	The plot function spawns and detaches processes to display the plots; as
-	many plots as you like can be displayed simultaneously.  At present, the 
-	displays are created using the ImageMagick 'display' utility; right-clicking 
-	in the window brings up a menu that provides a number of capabilities, 
-	including that of saving the image in a variety of formats.  (Future 
-	enhancements of the function will likely include an ability to save 
-	the plots in scalable, publishable, formats.)
+	The plot function spawns and detaches processes to display the plots;
+	as many plots as you like can be displayed simultaneously.  At present,
+	the displays are created using the ImageMagick 'display' utility;
+	right-clicking in the window brings up a menu that provides a number
+	of capabilities, including that of saving the image in a variety of
+	formats.  (Future enhancements of the function will likely include an
+	ability to save the plots in scalable, publishable, formats.)
 
 
 
