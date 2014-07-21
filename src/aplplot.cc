@@ -54,7 +54,20 @@ static string tlabel;
 static bool xlog = false;
 static bool ylog = false;
 static bool killem = false;
+static int  xcol = -1;
+
 static int hdlr_set    = 0;
+
+class LineClass {
+public:
+  LineClass (PLINT c, PLFLT *x,  PLFLT *y) {
+    count = c; xvec = x; yvec = y;
+  }
+  ~LineClass () { delete [] xvec; delete [] yvec; }
+  PLINT count;
+  PLFLT *xvec;
+  PLFLT *yvec;
+};
 
 static void
 sigchld_handler (int sig)
@@ -151,13 +164,11 @@ run_plot_z (PLINT count,
 }
 
 static int
-run_plot (PLINT count,
-	  APL_Float min_xv,
+run_plot (APL_Float min_xv,
 	  APL_Float max_xv,
 	  APL_Float min_yv,
 	  APL_Float max_yv,
-	  PLFLT *xvec,
-	  PLFLT *yvec)
+	  vector<LineClass *> lines)
 {
   pid_t pid = fork ();
   if (pid == 0) {		// child
@@ -176,8 +187,10 @@ run_plot (PLINT count,
     pllab (xlabel.empty () ? "" : xlabel.c_str (),
 	   ylabel.empty () ? "" : ylabel.c_str (),
 	   tlabel.empty () ? "" : tlabel.c_str ());
+
+    for (int i = 0; i < lines.size (); i++)
+      plline (lines[i]->count, lines[i]->xvec, lines[i]->yvec);
     
-    plline (count, xvec, yvec);
     plend ();
     exit (0);
   }
@@ -213,10 +226,11 @@ killAllChildProcess(int ppid)
 }
 
 static int
-plot_xy (ShapeItem xcol, ShapeItem ycol, Value_P B)
+plot_xy (ShapeItem pxcol, Value_P B)
 {
   int pid = -1;
   APL_Float xv, yv;
+  vector<LineClass *> lines;
 
   ShapeItem rows = B->get_rows();
   ShapeItem cols = B->get_cols();
@@ -226,32 +240,43 @@ plot_xy (ShapeItem xcol, ShapeItem ycol, Value_P B)
   APL_Float min_yv =  MAXDOUBLE;
   APL_Float max_yv = -MAXDOUBLE;
 
-  PLFLT *xvec = new PLFLT[(int)rows];
-  PLFLT *yvec = new PLFLT[(int)rows];
+  loop (q, cols) {
+    if (q == pxcol) continue;
 
-  loop(p, rows) {
-    ShapeItem x_offset = xcol + p * cols;
-    ShapeItem y_offset = ycol + p * cols;
-    
-    const Cell & cell_Bx = B->get_ravel (x_offset);
-    const Cell & cell_By = B->get_ravel (y_offset);
-    xv = cell_Bx.get_real_value ();
-    yv = cell_By.get_real_value ();
+    PLFLT *xvec = new PLFLT[(int)rows];
+    PLFLT *yvec = new PLFLT[(int)rows];
 
-    if (min_xv > xv) min_xv = xv;
-    if (max_xv < xv) max_xv = xv;
-    if (min_yv > yv) min_yv = yv;
-    if (max_yv < yv) max_yv = yv;
+    loop(p, rows) {
+      if (pxcol != -1) {
+	const Cell & cell_Bx = B->get_ravel (pxcol + p * cols);
+	xv = cell_Bx.get_real_value ();
+      }
+      else {
+	xv = (APL_Float)p;
+      }
+      const Cell & cell_By = B->get_ravel (q + p * cols);
+      yv = cell_By.get_real_value ();
+
+      if (min_xv > xv) min_xv = xv;
+      if (max_xv < xv) max_xv = xv;
+      if (min_yv > yv) min_yv = yv;
+      if (max_yv < yv) max_yv = yv;
 	  
-    xvec[p] = xv;
-    yvec[p] = yv;
+      xvec[p] = xv;
+      yvec[p] = yv;
+    }
+
+    LineClass *line = new LineClass (rows, xvec, yvec);
+    lines.push_back (line);
   }
 
-  pid = run_plot ((PLINT)rows, min_xv, max_xv, min_yv, max_yv,
-		  xvec, yvec);
+  pid = run_plot (min_xv, max_xv, min_yv, max_yv, lines);
+
   
-  delete [] xvec;
-  delete [] yvec;
+  //delete [] xvec;
+  //delete [] yvec;
+  for (int i = 0; i < lines.size (); i++)
+    delete lines[i];
   
   return pid;
 }
@@ -261,6 +286,7 @@ plot_y (Value_P B)
 {
   int pid = -1;
   APL_Float xv, yv;
+  vector<LineClass *> lines;
 	
   APL_Float min_xv =  MAXDOUBLE;
   APL_Float max_xv = -MAXDOUBLE;
@@ -284,12 +310,13 @@ plot_y (Value_P B)
     yvec[p] = yv;
   }
 
-  pid = run_plot ((PLINT)(B->element_count ()),
-		  min_xv, max_xv, min_yv, max_yv,
-		  xvec, yvec);
+
+  LineClass *line = new LineClass (B->element_count (), xvec, yvec);
+  lines.push_back (line);
+
+  pid = run_plot (min_xv, max_xv, min_yv, max_yv, lines);
   
-  delete [] xvec;
-  delete [] yvec;
+  delete line;
   
   return pid;
 }
@@ -375,7 +402,7 @@ eval_B(Value_P B)
 	break;
       case 2:			// xy graph
 	if (B->get_cols() == 1) pid = plot_y (B);
-	if (B->get_cols() >= 2) pid = plot_xy (0, 1, B);
+	if (B->get_cols() >= 2) pid = plot_xy (xcol, B);
 	break;
       default:			// multi dimensional 
 	break;
@@ -409,7 +436,14 @@ handle_opts ()
       xy 0:1 0:2 ...
       polar 0:1 0:2 ...
       bar 0:1 0:2
+      key 0 "text"; key 1 "text"...
    ***/
+
+#if 0
+  cerr << keyword;
+  for (int i = 0; i < args.size (); i++) cerr << " " << args[i];
+  cerr << endl;
+#endif
   
   if (0 == keyword.compare ("width")) {
     if (args.size () >= 1)
@@ -448,7 +482,13 @@ handle_opts ()
     ylog = (args.size () >= 1 && 0 == args[0].compare ("on"))
       ? true : false;
   }
+  else if (0 == keyword.compare ("xcol")) {
+    if (args.size () >= 1)
+      istringstream (args[0]) >> xcol;
+    else xcol = -1;
+  }
   else {
+    cerr << "invalid option " << keyword << endl;
     // fixme -- complain abt bad kwd
   }
   
@@ -476,17 +516,20 @@ struct option_parser : qi::grammar<Iterator, ascii::space_type> {
     using qi::lexeme;
     using ascii::char_;
 
-    unquoted_string %= lexeme[+char_("0-9a-zA-Z_")];
+    keyword_string  %= lexeme[+char_("0-9a-zA-Z_")];
+    unquoted_string %= lexeme[+(char_ - ' ' - ';')];
+    //    unquoted_string %= lexeme[+char_("0-9a-zA-Z_")];
     quoted_string   %= lexeme['"' >> +(char_ - '"') >> '"'];
     any_string      %= quoted_string | unquoted_string;
 
-    start %= unquoted_string[&set_kwd]
+    start %= keyword_string[&set_kwd]
       >> *any_string[&append_arg]
       >> *( ',' >> any_string[&append_arg] )
       >> ';' ;
   }
 
   qi::rule<Iterator, string(), ascii::space_type> any_string;
+  qi::rule<Iterator, string(), ascii::space_type> keyword_string;
   qi::rule<Iterator, string(), ascii::space_type> unquoted_string;
   qi::rule<Iterator, string(), ascii::space_type> quoted_string;
   qi::rule<Iterator,           ascii::space_type> start;
