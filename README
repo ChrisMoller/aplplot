@@ -100,7 +100,7 @@ Example usage
 		
 		* 'bgwhite'  Sets the background to white).
 		
-		* 'bacground <r> <g> <b>'  Sets the background to the specifed
+		* 'background <r> <g> <b>'  Sets the background to the specifed
 		  	color, where r, g, and b are all in the range of
 			0 - 255, inclusive.
 
