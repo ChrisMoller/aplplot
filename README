@@ -56,39 +56,45 @@ Example usage
 	Like above but with a semicolon list of options to control the plot.
 	At the moment, these options are supported:
 
-		 1. 'width <value>' where <value> is an interger plot width.
+		* 'width <value>' where <value> is an interger plot width.
 		       If the argument is omitted, the option is ignored.
 
-		 2. 'height <value>' where <value> is an interger plot height.
+		* 'height <value>' where <value> is an interger plot height.
 		       If the argument is omitted, the option is ignored.
 
-		 3. 'dims <width> <height' combining the above into one
+		* 'dims <width> <height' combining the above into one
 		    	operation.  If either argument is omitted, the option
 			is ignored.
 
-		 4. 'xlabel <x-axis label>' where <> is a string to use as the 
+		* 'xlabel <x-axis label>' where <> is a string to use as the 
 			x-axis label.  Enclosed in double-quotes ("") if the 
 			string contains spaces.  If the argument is omitted,
 			the label is cleared.
 
-		 5. 'ylabel <x-axis label>' y-axis label.
+		* 'ylabel <x-axis label>' y-axis label.
 
-		 6. 'tlabel <x-axis label>' top label.
+		* 'tlabel <x-axis label>' top label.
 
-		 7. 'kill' The plot function returns the process ID (pid) of
-		        the process used to display the plot.  Given a right
-			argument of those pids, the function kills those
-			processes and closes the display windows.
+		* 'kill' The plot function returns the process ID (pid) of
+		         the process used to display the plot.  Given a right
+		 	 argument of those pids, the function kills those
+			 processes and closes the display windows.
 
-		 8. 'xlog <state>'  If the <state> is "on" or omitted, make
+		* 'xlog <state>'  If the <state> is "on" or omitted, make
 		        the x-axis logarithmic.  If the state is "off," make
 			the x axis linear.  "logx" is a synonym for "xlog."
 
-		 9. 'ylog <state>'  See the xlog option.
+		* 'ylog <state>'  See the xlog option.
 
-		10. 'xcol <column>'  Given a multi-column right argument, sets
+		* 'xcol <column>'  Given a multi-column right argument, sets
 			which column to use as the x values.  If set to -1 or
 			if the argument is omitted, an x-axis is synthesized.
+
+		* 'file <filename>'  Specifies a file name for output
+		  	destinations.
+
+		* 'dest <dest>'  Specifies an output format and must be one of
+		  	screen, png, pdf, svg, eps, or ps.
 
 		Other options will be added as time goes on.
 

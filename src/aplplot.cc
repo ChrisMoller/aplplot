@@ -192,14 +192,20 @@ run_plot_z (PLINT count,
     return (int)pid;
   }
   else {
-    FILE *po = fopen (filename.c_str (), "w");
-    plsfile (po);
-    render_z (count,
-	      min_xv, max_xv,
-	      min_yv, max_yv,
-	      min_zv, max_zv,
-	      xvec, yvec, zvec);
-    plend ();
+    if (!filename.empty ()) {
+      FILE *po = fopen (filename.c_str (), "w");
+      if (po) {
+	plsfile (po);
+	render_z (count,
+		  min_xv, max_xv,
+		  min_yv, max_yv,
+		  min_zv, max_zv,
+		  xvec, yvec, zvec);
+	plend ();
+      }
+      else cerr << "file \"" << filename << "\" could not be opened.\n";
+    }
+    else cerr << "missing filename\n";
     return 0;
   }
 }
@@ -252,10 +258,16 @@ run_plot (APL_Float min_xv,
       return (int)pid;
     }
   else {
-    FILE *po = fopen (filename.c_str (), "w");
-    plsfile (po);
-    render_xy (min_xv, max_xv, min_yv, max_yv, lines);
-    plend ();
+    if (!filename.empty ()) {
+      FILE *po = fopen (filename.c_str (), "w");
+      if (po) {
+	plsfile (po);
+	render_xy (min_xv, max_xv, min_yv, max_yv, lines);
+	plend ();
+      }
+      else cerr << "file \"" << filename << "\" could not be opened.\n";
+    }
+    else cerr << "missing filename\n";
     return 0;
   }
 }
