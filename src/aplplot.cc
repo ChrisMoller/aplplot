@@ -57,6 +57,7 @@ static bool killem = false;
 static int  xcol = -1;
 static string filename;
 static string target;
+static unsigned char bgred = 0, bggreen = 0, bgblue = 0;
 
 static int hdlr_set    = 0;
 
@@ -119,6 +120,7 @@ render_z (PLINT count,
      */
     
 
+  plscolbg (bgred, bggreen, bgblue);
   plinit ();
 
   pladv (0);
@@ -218,6 +220,7 @@ render_xy (APL_Float min_xv,
 	   vector<LineClass *> lines)
 {
   plspage (0.0,  0.0, plot_width, plot_height, 0.0, 0.0);
+  plscolbg (bgred, bggreen, bgblue);
   plinit ();
   plenv (min_xv, max_xv, min_yv, max_yv, 0,
 	 (xlog ? 10 : 0) + (ylog ? 20 : 0));
@@ -588,6 +591,23 @@ handle_opts ()
       }
     }
     else target = "xcairo";
+  }
+  else if (0 == keyword.compare ("bgwhite")) {
+    bgred = 255; bggreen = 255; bgblue = 255;
+  }
+  else if (0 == keyword.compare ("bgblack")) {
+    bgred = 0; bggreen = 0, bgblue = 0;
+  }
+  else if (0 == keyword.compare ("background")) {
+    if (args.size () >= 3) {
+      int r,g,b;
+      istringstream (args[0]) >> r;
+      istringstream (args[1]) >> g;
+      istringstream (args[2]) >> b;
+      bgred   = (unsigned char)r;
+      bggreen = (unsigned char)g;
+      bgblue  = (unsigned char)b;
+    }
   }
   else {
     cerr << "invalid option " << keyword << endl;
