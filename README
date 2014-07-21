@@ -56,31 +56,35 @@ Example usage
 	Like above but with a semicolon list of options to control the plot.  At 
 	the moment, three options are supported:
 
-		1. 'width <value>' where <value> is an interger plot width.
+		 1. 'width <value>' where <value> is an interger plot width.
 
-		2. 'height <value>' where <value> is an interger plot height.
+		 2. 'height <value>' where <value> is an interger plot height.
 
-		3. 'dims <width> <height' combining the above into one operation.
+		 3. 'dims <width> <height' combining the above into one operation.
 
-		4. 'xlabel <x-axis label>' where <> is a string to use as the 
+		 4. 'xlabel <x-axis label>' where <> is a string to use as the 
 			x-axis label.  Enclosed in double-quotes ("") if the 
 			string contains spaces.  If the argument is omitted,
 			the label is cleared.
 
-		5. 'ylabel <x-axis label>' y-axis label.
+		 5. 'ylabel <x-axis label>' y-axis label.
 
-		6. 'tlabel <x-axis label>' top label.
+		 6. 'tlabel <x-axis label>' top label.
 
-		7. 'kill' The plot function returns the process ID (pid) of the 
+		 7. 'kill' The plot function returns the process ID (pid) of the 
 			process used to display the plot.  Given a right argument
 			of those pids, the function kills those processes and 
 			closes the display windows.
 
-		6. 'xlog <state>'  If the <state> is "on," make the x-axis logarithmic.
-			If the state is omitted or of any other value, make the x axis
-			linear.
+		 8. 'xlog <state>'  If the <state> is "on," make the x-axis 
+			logarithmic.  If the state is omitted or of any other 
+			value, make the x axis linear.
 
-		6. 'ylog <state>'  See the xlog option.
+		 9. 'ylog <state>'  See the xlog option.
+
+		10. 'xcol <column>'  Given a multi-column right argument, sets
+			which column to use as the x values.  If set to -1 or if 
+			the argument is omitted, an x-axis is synthesized.
 
 		Other options will be added as time goes on.
 

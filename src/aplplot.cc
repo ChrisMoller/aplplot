@@ -188,8 +188,10 @@ run_plot (APL_Float min_xv,
 	   ylabel.empty () ? "" : ylabel.c_str (),
 	   tlabel.empty () ? "" : tlabel.c_str ());
 
-    for (int i = 0; i < lines.size (); i++)
+    for (int i = 0; i < lines.size (); i++) {
+      plcol0 (1 + i % 15);
       plline (lines[i]->count, lines[i]->xvec, lines[i]->yvec);
+    }
     
     plend ();
     exit (0);
@@ -518,7 +520,6 @@ struct option_parser : qi::grammar<Iterator, ascii::space_type> {
 
     keyword_string  %= lexeme[+char_("0-9a-zA-Z_")];
     unquoted_string %= lexeme[+(char_ - ' ' - ';')];
-    //    unquoted_string %= lexeme[+char_("0-9a-zA-Z_")];
     quoted_string   %= lexeme['"' >> +(char_ - '"') >> '"'];
     any_string      %= quoted_string | unquoted_string;
 
