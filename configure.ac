@@ -13,11 +13,12 @@ AM_PROG_LIBTOOL
 APL_SOURCES=-I../../../apl-1.3/src/native
 AC_SUBST(APL_SOURCES)
 
-AC_CHECK_PROG([IMG_DISPLAY], [display], [yes], [])
-m4_ifblank([$IMG_DISPLAY],
-  [echo "$IMG_DISPLAY";
-  echo ">>>> You need to install the ImageMagick package. <<<<";
-  echo ""; exit])
+# Not using this any more, but I'll leave this here just in case
+#AC_CHECK_PROG([IMG_DISPLAY], [display], [yes], [])
+#m4_ifblank([$IMG_DISPLAY],
+#  [echo "$IMG_DISPLAY";
+#  echo ">>>> You need to install the ImageMagick package. <<<<";
+#  echo ""; exit])
 
 # AC_CHECK_HEADERS tries to compile the header but uses C instead of C++
 # maybe an autoconf expert knows how to make it work right

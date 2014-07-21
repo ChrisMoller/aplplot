@@ -55,6 +55,8 @@ static bool xlog = false;
 static bool ylog = false;
 static bool killem = false;
 static int  xcol = -1;
+static string filename;
+static string target;
 
 static int hdlr_set    = 0;
 
@@ -90,25 +92,18 @@ get_function_mux(const char * function_name)
    return 0;
 }
 
-static int
-run_plot_z (PLINT count,
-	    APL_Float min_xv,
-	    APL_Float max_xv,
-	    APL_Float min_yv,
-	    APL_Float max_yv,
-	    APL_Float min_zv,
-	    APL_Float max_zv,
-	    PLFLT *xvec,
-	    PLFLT *yvec,
-	    PLFLT *zvec)
+static void
+render_z (PLINT count,
+	  APL_Float min_xv,
+	  APL_Float max_xv,
+	  APL_Float min_yv,
+	  APL_Float max_yv,
+	  APL_Float min_zv,
+	  APL_Float max_zv,
+	  PLFLT *xvec,		// fixme switch to class
+	  PLFLT *yvec,
+	  PLFLT *zvec)
 {
-  pid_t pid = fork ();
-  if (pid == 0) {		// child
-    setsid ();
-    FILE *po = popen ("display /dev/stdin", "w");
-    plsfile (po);
-    plsdev ("pngcairo");
-
 
     /*
          z
@@ -124,43 +119,111 @@ run_plot_z (PLINT count,
      */
     
 
-    plinit ();
+  plinit ();
 
-    pladv (0);
-    plvpor( 0.0, 1.0, 0.0, 1.0 );
-    plwind( -512.00, 512.0, -200.0, 600.0);
+  pladv (0);
+  plvpor( 0.0, 1.0, 0.0, 1.0 );
+  plwind( -512.00, 512.0, -200.0, 600.0);
+
+  pllab (xlabel.empty () ? "" : xlabel.c_str (),
+	 ylabel.empty () ? "" : ylabel.c_str (),
+	 tlabel.empty () ? "" : tlabel.c_str ());
     
-    plw3d (512.0,	// basex,
-	   512.0,	// basey,
-	   512.0,	// height,
-	   min_xv,	// xmin,
-	   max_xv,	// xmax,
-	   min_yv,	// ymin,
-	   max_yv,	// ymax,
-	   min_zv,	// zmin,
-	   max_zv,	// zmax,
-	   20.0,	// alt,
-	   -30.0);	// az: pos cw from top, neg ccw from top
+  plw3d (512.0,	// basex,
+	 512.0,	// basey,
+	 512.0,	// height,
+	 min_xv,	// xmin,
+	 max_xv,	// xmax,
+	 min_yv,	// ymin,
+	 max_yv,	// ymax,
+	 min_zv,	// zmin,
+	 max_zv,	// zmax,
+	 20.0,	// alt,
+	 -30.0);	// az: pos cw from top, neg ccw from top
 
-    plbox3 ("bnstu",	// xopt,
-	    "x label",	// xlabel,	
-	    0.0,	// xtick,
-	    0,		// nxsub,
-	    "bnstu",	// xopt,
-	    "y label",	// xlabel,	
-	    0.0,	// xtick,
-	    0,		// nxsub,
-	    "bcdmnstuv",	// xopt,
-	    "z label",	// xlabel,	
-	    0.0,	// xtick,
-	    0);		// nxsub
+  plbox3 ("bnstu",	// xopt,
+	  "x label",	// xlabel,	
+	  0.0,	// xtick,
+	  0,		// nxsub,
+	  "bnstu",	// xopt,
+	  "y label",	// xlabel,	
+	  0.0,	// xtick,
+	  0,		// nxsub,
+	  "bcdmnstuv",	// xopt,
+	  "z label",	// xlabel,	
+	  0.0,	// xtick,
+	  0);		// nxsub
 
+  plline3 (count, xvec, yvec, zvec);
+}
 
-    plline3 (count, xvec, yvec, zvec);
-    plend ();
-    exit (0);
+static int
+run_plot_z (PLINT count,
+	    APL_Float min_xv,
+	    APL_Float max_xv,
+	    APL_Float min_yv,
+	    APL_Float max_yv,
+	    APL_Float min_zv,
+	    APL_Float max_zv,
+	    PLFLT *xvec,
+	    PLFLT *yvec,
+	    PLFLT *zvec)
+{
+  plsdev (target.c_str ());
+  if (0 == target.compare ("xcairo"))  {
+    pid_t pid = fork ();
+    if (pid == 0) {		// child
+      setsid ();
+#ifdef USE_IMAGEMAGICK_DISPLAY
+      FILE *po = popen ("display /dev/stdin", "w");
+      plsfile (po);
+      plsdev ("pngcairo");
+#endif
+    
+      render_z (count,
+		min_xv, max_xv,
+		min_yv, max_yv,
+		min_zv, max_zv,
+		xvec, yvec, zvec);
+
+      plend ();
+      exit (0);
+    }
+    return (int)pid;
   }
-  return (int)pid;
+  else {
+    FILE *po = fopen (filename.c_str (), "w");
+    plsfile (po);
+    render_z (count,
+	      min_xv, max_xv,
+	      min_yv, max_yv,
+	      min_zv, max_zv,
+	      xvec, yvec, zvec);
+    plend ();
+    return 0;
+  }
+}
+
+static void
+render_xy (APL_Float min_xv,
+	   APL_Float max_xv,
+	   APL_Float min_yv,
+	   APL_Float max_yv,
+	   vector<LineClass *> lines)
+{
+  plspage (0.0,  0.0, plot_width, plot_height, 0.0, 0.0);
+  plinit ();
+  plenv (min_xv, max_xv, min_yv, max_yv, 0,
+	 (xlog ? 10 : 0) + (ylog ? 20 : 0));
+
+  pllab (xlabel.empty () ? "" : xlabel.c_str (),
+	 ylabel.empty () ? "" : ylabel.c_str (),
+	 tlabel.empty () ? "" : tlabel.c_str ());
+
+  for (int i = 0; i < lines.size (); i++) {
+    plcol0 (1 + i % 15);
+    plline (lines[i]->count, lines[i]->xvec, lines[i]->yvec);
+  }
 }
 
 static int
@@ -170,33 +233,31 @@ run_plot (APL_Float min_xv,
 	  APL_Float max_yv,
 	  vector<LineClass *> lines)
 {
-  pid_t pid = fork ();
-  if (pid == 0) {		// child
-    setsid ();
-    FILE *po = popen ("display /dev/stdin", "w");
+  plsdev (target.c_str ());
+  if (0 == target.compare ("xcairo"))  {
+    pid_t pid = fork ();
+    if (pid == 0) {		// child
+      setsid ();
+#ifdef USE_IMAGEMAGICK_DISPLAY
+	FILE *po = popen ("display /dev/stdin", "w");
+	plsfile (po);
+	plsdev ("pngcairo");
+#endif
     
-    plsfile (po);
-    plsdev ("pngcairo");
-
-    //       xdpi  ydpi xlen   ylen   xoff yoff
-    plspage (0.0,  0.0, plot_width, plot_height, 0.0, 0.0);
-    plinit ();
-    plenv (min_xv, max_xv, min_yv, max_yv, 0,
-	   (xlog ? 10 : 0) + (ylog ? 20 : 0));
-
-    pllab (xlabel.empty () ? "" : xlabel.c_str (),
-	   ylabel.empty () ? "" : ylabel.c_str (),
-	   tlabel.empty () ? "" : tlabel.c_str ());
-
-    for (int i = 0; i < lines.size (); i++) {
-      plcol0 (1 + i % 15);
-      plline (lines[i]->count, lines[i]->xvec, lines[i]->yvec);
+	render_xy (min_xv, max_xv, min_yv, max_yv, lines);
+    
+	plend ();
+	exit (0);
+      }
+      return (int)pid;
     }
-    
+  else {
+    FILE *po = fopen (filename.c_str (), "w");
+    plsfile (po);
+    render_xy (min_xv, max_xv, min_yv, max_yv, lines);
     plend ();
-    exit (0);
+    return 0;
   }
-  return (int)pid;
 }
 
 static void
@@ -416,12 +477,15 @@ eval_B(Value_P B)
   else {
     // non numeric error
   }
-  
-  const IntCell apid ((APL_Integer)pid);
-  Value_P Z(new Value(apid, LOC));
-  Z->set_default(*Value::Zero_P);
-  Z->check_value(LOC);
-  return Token(TOK_APL_VALUE1, Z);
+
+  if (pid != 0) {
+    const IntCell apid ((APL_Integer)pid);
+    Value_P Z(new Value(apid, LOC));
+    Z->set_default(*Value::Zero_P);
+    Z->check_value(LOC);
+    return Token(TOK_APL_VALUE1, Z);
+  }
+  else return Token(TOK_APL_VALUE1, Value::Str0_0_P);
 }
 
 string keyword;
@@ -465,15 +529,15 @@ handle_opts ()
   }
   else if (0 == keyword.compare ("xlabel")) {
     if (args.size () >= 1) xlabel = args[0];
-    else xlabel.erase ();
+    else xlabel.clear ();
   }
   else if (0 == keyword.compare ("ylabel")) {
     if (args.size () >= 1) ylabel = args[0];
-    else ylabel.erase ();
+    else ylabel.clear ();
   }
   else if (0 == keyword.compare ("tlabel")) {
     if (args.size () >= 1) tlabel = args[0];
-    else tlabel.erase ();
+    else tlabel.clear ();
   }
   else if (0 == keyword.compare ("kill")) {
     killem = true;
@@ -491,12 +555,34 @@ handle_opts ()
       istringstream (args[0]) >> xcol;
     else xcol = -1;
   }
+  else if (0 == keyword.compare ("file")) {
+    if (args.size () >= 1) filename = args[0];
+    else filename.clear ();
+    if (filename.empty () || filename.length () == 0) target = "xcairo";
+  }
+  else if (0 == keyword.compare ("dest")) {
+    if (args.size () >= 1) {
+      if (0 == args[0].compare ("screen"))   target = "xcairo";
+      else if (0 == args[0].compare ("png")) target = "pngcairo";
+      else if (0 == args[0].compare ("pdf")) target = "pdfcairo";
+      else if (0 == args[0].compare ("ps"))  target = "pscairo";
+      else if (0 == args[0].compare ("eps")) target = "epscairo";
+      else if (0 == args[0].compare ("svg")) target = "svgcairo";
+      else {
+	cerr << "option must be one of screen, png, pdf, svg\n";
+	cerr << "eps, or ps.\n";
+	cerr << "Setting destination to screen\n";
+	target = "xcairo";
+      }
+    }
+    else target = "xcairo";
+  }
   else {
     cerr << "invalid option " << keyword << endl;
     // fixme -- complain abt bad kwd
   }
   
-  keyword.erase ();
+  keyword.clear ();
   args.clear ();
 }
 
