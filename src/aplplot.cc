@@ -19,6 +19,7 @@
 */
 
 #include <boost/spirit/include/qi.hpp>
+#include <boost/unordered_map.hpp>
 #include<iostream>
 #include<string>
 
@@ -39,6 +40,7 @@
 
 #include "aplplot.hh"
 
+
 using namespace std;
 namespace qi = boost::spirit::qi;
 namespace ascii = boost::spirit::ascii;
@@ -46,18 +48,145 @@ namespace ascii = boost::spirit::ascii;
 #define DEFAULT_PLOT_WIDTH	512
 #define DEFAULT_PLOT_HEIGHT	480
 
-static int plot_width  = DEFAULT_PLOT_WIDTH;
-static int plot_height = DEFAULT_PLOT_HEIGHT;
-static string xlabel;
-static string ylabel;
-static string tlabel;
-static bool xlog = false;
-static bool ylog = false;
-static bool killem = false;
-static int  xcol = -1;
-static string filename;
-static string target;
+static int 	plot_width  = DEFAULT_PLOT_WIDTH;
+static int	plot_height = DEFAULT_PLOT_HEIGHT;
+static string	xlabel;
+static string	ylabel;
+static string	tlabel;
+static bool	xlog = false;
+static bool	ylog = false;
+static bool	killem = false;
+static int	xcol = -1;
+static string 	filename;
+static string 	target;
 static unsigned char bgred = 0, bggreen = 0, bgblue = 0;
+
+string keyword;
+vector<string> args;
+
+typedef boost::unordered_map<std::string, int> si_map;
+si_map  kwd_map;
+// I don't know if there's an unordered_map.empty(), so I'll fake it.
+static bool kwd_map_set = false; 
+
+typedef void (*option_fcn)(int);
+typedef struct { std::string kwdx; option_fcn fcnx; int argx;} kwd_s;
+#define opt_kwd(i) kwds[i].kwdx
+#define opt_fcn(i) kwds[i].fcnx
+#define opt_arg(i) kwds[i].argx
+
+static void set_width (int arg) {
+  if (args.size () >= 1) istringstream (args[0]) >> plot_width;
+}
+
+static void set_height (int arg) {
+  if (args.size () >= 1) istringstream (args[0]) >> plot_height;
+}
+
+static void set_dims (int arg) {
+  if (args.size () >= 2) {
+    istringstream (args[0]) >> plot_width;
+    istringstream (args[1]) >> plot_height;
+  }
+}
+
+static void set_xlabel (int arg) {
+  if (args.size () >= 1) xlabel = args[0];
+  else xlabel.clear ();
+}
+
+static void set_ylabel (int arg) {
+  if (args.size () >= 1) ylabel = args[0];
+  else ylabel.clear ();
+}
+
+static void set_tlabel (int arg) {
+  if (args.size () >= 1) tlabel = args[0];
+  else tlabel.clear ();
+}
+
+static void set_killem (int arg) { killem = true; }
+
+static void set_xlog (int arg) {
+  xlog = (args.size () >= 1 && 0 == args[0].compare ("off")) ? false : true;
+}
+
+static void set_ylog (int arg) {
+  ylog = (args.size () >= 1 && 0 == args[0].compare ("off")) ? false : true;
+}
+
+static void set_xcol (int arg) {
+  if (args.size () >= 1) istringstream (args[0]) >> xcol;
+  else xcol = -1;
+}
+
+static void set_file (int arg) {
+  if (args.size () >= 1) filename = args[0];
+  else filename.clear ();
+  if (filename.empty () || filename.length () == 0) target = "xcairo";
+}
+
+static void set_dest (int arg) {
+  if (args.size () >= 1) {
+    if (0 == args[0].compare ("screen"))   target = "xcairo";
+    else if (0 == args[0].compare ("png")) target = "pngcairo";
+    else if (0 == args[0].compare ("pdf")) target = "pdfcairo";
+    else if (0 == args[0].compare ("ps"))  target = "pscairo";
+    else if (0 == args[0].compare ("eps")) target = "epscairo";
+    else if (0 == args[0].compare ("svg")) target = "svgcairo";
+    else {
+      cerr << "option must be one of screen, png, pdf, svg\n";
+      cerr << "eps, or ps.\n";
+      cerr << "Setting destination to screen\n";
+      target = "xcairo";
+    }
+  }
+  else target = "xcairo";
+}
+
+enum {APL_BG_SET, APL_BG_BLACK, APL_BG_WHITE};
+
+static void set_background (int arg) {
+  switch (arg) {
+  case APL_BG_SET:
+    bgred = 255; bggreen = 255; bgblue = 255;
+    break;
+  case APL_BG_BLACK:
+    bgred = 0; bggreen = 0, bgblue = 0;
+    break;
+  case APL_BG_WHITE:
+     if (args.size () >= 3) {
+      int r,g,b;
+      istringstream (args[0]) >> r;
+      istringstream (args[1]) >> g;
+      istringstream (args[2]) >> b;
+      bgred   = (unsigned char)r;
+      bggreen = (unsigned char)g;
+      bgblue  = (unsigned char)b;
+    }
+    break;
+  }
+}
+
+kwd_s kwds[] = {
+  {"width",		set_width,	0},
+  {"height",		set_height,	0},
+  {"dims",		set_dims,	0},
+  {"xlabel",		set_xlabel,	0},
+  {"ylabel",		set_ylabel,	0},
+  {"tlabel",		set_tlabel,	0},
+  {"kill",		set_killem,	0},
+  {"xlog",		set_xlog,	0},
+  {"logx",		set_xlog,	0},
+  {"ylog",		set_ylog,	0},
+  {"logy",		set_ylog,	0},
+  {"xcol",		set_xcol,	0},
+  {"file",		set_file,	0},
+  {"dest",		set_dest,	0},
+  {"bgwhite",		set_background,	APL_BG_WHITE},
+  {"bgblack",		set_background,	APL_BG_BLACK},
+  {"background",	set_background,	APL_BG_SET}
+};
 
 static int hdlr_set    = 0;
 
@@ -503,111 +632,21 @@ eval_B(Value_P B)
   else return Token(TOK_APL_VALUE1, Value::Str0_0_P);
 }
 
-string keyword;
-vector<string> args;
-
 static void
 handle_opts ()
 {
   if (keyword.empty ()) return;
 
-  /***
-      TODO:
+  if (!kwd_map_set) {
+    for (int i = 0; i < sizeof (kwds) / sizeof (kwd_s); i++)
+    kwd_map [opt_kwd (i)] = i;
+    kwd_map_set = true;
+  }
 
-      finish/fix log scales
-      
-      xy 0:1 0:2 ...
-      polar 0:1 0:2 ...
-      bar 0:1 0:2
-      key 0 "text"; key 1 "text"...
-   ***/
-
-#if 0
-  cerr << keyword;
-  for (int i = 0; i < args.size (); i++) cerr << " " << args[i];
-  cerr << endl;
-#endif
-  
-  if (0 == keyword.compare ("width")) {
-    if (args.size () >= 1)
-      istringstream (args[0]) >> plot_width;
-  }
-  else if (0 == keyword.compare ("height")) {
-    if (args.size () >= 1)
-      istringstream (args[0]) >> plot_height;
-  }
-  else if (0 == keyword.compare ("dims")) {
-    if (args.size () >= 2) {
-      istringstream (args[0]) >> plot_width;
-      istringstream (args[1]) >> plot_height;
-    }
-  }
-  else if (0 == keyword.compare ("xlabel")) {
-    if (args.size () >= 1) xlabel = args[0];
-    else xlabel.clear ();
-  }
-  else if (0 == keyword.compare ("ylabel")) {
-    if (args.size () >= 1) ylabel = args[0];
-    else ylabel.clear ();
-  }
-  else if (0 == keyword.compare ("tlabel")) {
-    if (args.size () >= 1) tlabel = args[0];
-    else tlabel.clear ();
-  }
-  else if (0 == keyword.compare ("kill")) {
-    killem = true;
-  }
-  else if (0 == keyword.compare ("xlog") || 0 == keyword.compare ("logx")) {
-    xlog = (args.size () >= 1 && 0 == args[0].compare ("off"))
-      ? false : true;
-  }
-  else if (0 == keyword.compare ("ylog") || 0 == keyword.compare ("logy")) {
-    ylog = (args.size () >= 1 && 0 == args[0].compare ("off"))
-      ? false : true;
-  }
-  else if (0 == keyword.compare ("xcol")) {
-    if (args.size () >= 1)
-      istringstream (args[0]) >> xcol;
-    else xcol = -1;
-  }
-  else if (0 == keyword.compare ("file")) {
-    if (args.size () >= 1) filename = args[0];
-    else filename.clear ();
-    if (filename.empty () || filename.length () == 0) target = "xcairo";
-  }
-  else if (0 == keyword.compare ("dest")) {
-    if (args.size () >= 1) {
-      if (0 == args[0].compare ("screen"))   target = "xcairo";
-      else if (0 == args[0].compare ("png")) target = "pngcairo";
-      else if (0 == args[0].compare ("pdf")) target = "pdfcairo";
-      else if (0 == args[0].compare ("ps"))  target = "pscairo";
-      else if (0 == args[0].compare ("eps")) target = "epscairo";
-      else if (0 == args[0].compare ("svg")) target = "svgcairo";
-      else {
-	cerr << "option must be one of screen, png, pdf, svg\n";
-	cerr << "eps, or ps.\n";
-	cerr << "Setting destination to screen\n";
-	target = "xcairo";
-      }
-    }
-    else target = "xcairo";
-  }
-  else if (0 == keyword.compare ("bgwhite")) {
-    bgred = 255; bggreen = 255; bgblue = 255;
-  }
-  else if (0 == keyword.compare ("bgblack")) {
-    bgred = 0; bggreen = 0, bgblue = 0;
-  }
-  else if (0 == keyword.compare ("background")) {
-    if (args.size () >= 3) {
-      int r,g,b;
-      istringstream (args[0]) >> r;
-      istringstream (args[1]) >> g;
-      istringstream (args[2]) >> b;
-      bgred   = (unsigned char)r;
-      bggreen = (unsigned char)g;
-      bgblue  = (unsigned char)b;
-    }
+  if (kwd_map.find (keyword) != kwd_map.end ()) {
+    int idx = -1;
+    idx = kwd_map.at (keyword);
+    if (idx >= 0) (*opt_fcn (idx))(opt_arg (idx));
   }
   else {
     cerr << "invalid option " << keyword << endl;
