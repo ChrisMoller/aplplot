@@ -66,8 +66,6 @@ vector<string> args;
 
 typedef boost::unordered_map<std::string, int> si_map;
 si_map  kwd_map;
-// I don't know if there's an unordered_map.empty(), so I'll fake it.
-static bool kwd_map_set = false; 
 
 typedef void (*option_fcn)(int);
 typedef struct { std::string kwdx; option_fcn fcnx; int argx;} kwd_s;
@@ -637,11 +635,9 @@ handle_opts ()
 {
   if (keyword.empty ()) return;
 
-  if (!kwd_map_set) {
+  if (kwd_map.empty ())
     for (int i = 0; i < sizeof (kwds) / sizeof (kwd_s); i++)
-    kwd_map [opt_kwd (i)] = i;
-    kwd_map_set = true;
-  }
+      kwd_map [opt_kwd (i)] = i;
 
   if (kwd_map.find (keyword) != kwd_map.end ()) {
     int idx = -1;
