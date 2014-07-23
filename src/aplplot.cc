@@ -66,17 +66,24 @@ enum {APL_MODE_SET, APL_MODE_XY, APL_MODE_POLAR };
 enum {APL_ANGLE_SET, APL_ANGLE_DEGREES,
       APL_ANGLE_RADIANS, APL_ANGLE_PI_RADIANS };
 
-static int 	plot_width  = DEFAULT_PLOT_WIDTH;
-static int	plot_height = DEFAULT_PLOT_HEIGHT;
+#define APL_DRAW_SET		-1
+#define APL_DRAW_NOTHING	0
+#define APL_DRAW_LINES		(1 << 0)
+#define APL_DRAW_POINTS		(2 << 1)
+#define APL_DRAW_BOTH		(APL_DRAW_LINES | APL_DRAW_POINTS)
+
+static int 	plot_width	= DEFAULT_PLOT_WIDTH;
+static int	plot_height	= DEFAULT_PLOT_HEIGHT;
 static string	xlabel;
 static string	ylabel;
 static string	tlabel;
-static bool	xlog = false;
-static bool	ylog = false;
-static int	mode = APL_MODE_XY;
-static int      angle_units = APL_ANGLE_RADIANS;
-static bool	killem = false;
-static int	xcol = -1;
+static bool	xlog		= false;
+static bool	ylog		= false;
+static int	mode		= APL_MODE_XY;
+static int      angle_units	= APL_ANGLE_RADIANS;
+static bool	killem		= false;
+static int	xcol		= -1;
+static int	draw		= APL_DRAW_LINES;
 static string 	filename;
 static string 	target (DEF_XCAIRO);;
 static unsigned char bgred = 0, bggreen = 0, bgblue = 0;
@@ -105,6 +112,7 @@ static void reset_options (int arg) {
   angle_units	= APL_ANGLE_RADIANS;
   killem	= false;
   xcol		= -1;
+  draw		= APL_DRAW_LINES;
   target	= DEF_XCAIRO;
   bgred		= bggreen = bgblue = 0;
 }
@@ -179,6 +187,30 @@ static void set_angle (int arg) {
       }
     } else angle_units = APL_ANGLE_RADIANS;
   } else angle_units = arg;
+}
+
+static void set_draw (int arg) {
+  if (arg== APL_DRAW_SET) {
+    if (args.size () >= 1) {
+      switch (*(args[0].c_str ())) {
+      case 'l':
+      case 'L':
+	draw = APL_DRAW_LINES;
+	break;
+      case 'p':
+      case 'P':
+	draw = APL_DRAW_POINTS;
+	break;
+      case 'b':
+      case 'B':
+	draw = APL_DRAW_BOTH;
+	break;
+      default:
+	cerr << "Unrecognised draw option " << args[0] << endl;
+	break;
+      }
+    } else draw = APL_DRAW_LINES;
+  } else draw = arg;
 }
 
 
@@ -256,6 +288,10 @@ kwd_s kwds[] = {
   {"radians",		set_angle,	APL_ANGLE_RADIANS},
   {"piradians",		set_angle,	APL_ANGLE_PI_RADIANS},
   {"xcol",		set_xcol,	0},
+  {"draw",		set_draw,	APL_DRAW_SET},
+  {"lines",		set_draw,	APL_DRAW_LINES},
+  {"points",		set_draw,	APL_DRAW_POINTS},
+  {"both",		set_draw,	APL_DRAW_BOTH},
   {"file",		set_file,	0},
   {"dest",		set_dest,	0},
   {"reset",		reset_options,	0},
@@ -478,9 +514,13 @@ render_xy (APL_Float min_xv,
 	 ylabel.empty () ? "" : ylabel.c_str (),
 	 tlabel.empty () ? "" : tlabel.c_str ());
 
+  plssym (0.0, 0.75);
   for (int i = 0; i < lines.size (); i++) {
     plcol0 (2 + i % 14);
-    plline (lines[i]->count, lines[i]->xvec, lines[i]->yvec);
+    if (draw & APL_DRAW_LINES)
+      plline (lines[i]->count, lines[i]->xvec, lines[i]->yvec);
+    if (draw & APL_DRAW_POINTS)
+      plpoin (lines[i]->count, lines[i]->xvec, lines[i]->yvec, 2 + i % 30);
   }
   plcol0 (1);
 }
