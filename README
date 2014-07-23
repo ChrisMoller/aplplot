@@ -53,8 +53,8 @@ Example usage
 
 	  'options' plot a
 
-	Like above but with a semicolon-separated list of options to control the 
-	plot.  At the moment, these options are supported:
+	Like above but with a semicolon-separated list of options to control
+	the plot.  At the moment, these options are supported:
 
 		* 'width <value>' where <value> is an interger plot width.
 		       If the argument is omitted, the option is ignored.
@@ -104,17 +104,17 @@ Example usage
 		  	color, where r, g, and b are all in the range of
 			0 - 255, inclusive.
 		
-		* 'mode <mode>'  Sets the plot mode to either polar or cartesian.  
-			<mode> is either "polar" or "xy;" if omitted, befaults to
-			cartesian.  Keywords "polar" and "xy" are short-cuts to
-			set the corresponding mode.
+		* 'mode <mode>'  Sets the plot mode to either polar or
+		cartesian.  <mode> is either "polar" or "xy;" if omitted,
+		defaults to cartesian.  Keywords "polar" and "xy" are
+		short-cuts to set the corresponding mode.
 
-		* 'angle_units <units>'  Sets the interpretation of theta in polar 
-			plots to degress, radians, or pi-radians.  Any argument 
-			beginning with "d," "r," or "p" will do what you expect;
-			if the argument is omitted, it defaults to degrees.  
-			"degrees," "radians," and "piradians" are short-cuts to
-			the corresponding settings.
+		* 'angle_units <units>'  Sets the interpretation of theta in
+		        polar plots to degress, radians, or pi-radians.  Any
+			argument beginning with "d," "r," or "p" will do what
+			you expect; if the argument is omitted, it defaults to
+			radians.  "degrees," "radians," and "piradians" are
+			short-cuts to the corresponding settings.
 
 		Other options will be added as time goes on.
 

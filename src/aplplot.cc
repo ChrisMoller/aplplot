@@ -148,7 +148,7 @@ static void set_angle (int arg) {
 	cerr << "Unrecognised angle unit " << args[0] << endl;
 	break;
       }
-    } else angle_units = APL_ANGLE_DEGREES;
+    } else angle_units = APL_ANGLE_RADIANS;
   } else angle_units = arg;
 }
 
