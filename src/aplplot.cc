@@ -30,6 +30,10 @@
 #include <values.h>
 #include <plplot/plplot.h>
 
+using namespace std;
+namespace qi = boost::spirit::qi;
+namespace ascii = boost::spirit::ascii;
+
 #undef PACKAGE
 #undef PACKAGE_BUGREPORT
 #undef PACKAGE_NAME
@@ -41,10 +45,19 @@
 
 #include "aplplot.hh"
 
+#define DEF_XCAIRO	"xcairo"
+#define DEF_PNGCAIRO	"pngcairo"
+#define DEF_PDFCAIRO	"pdfcairo"
+#define DEF_PSCAIRO	"pscairo"
+#define DEF_EPSCAIRO	"epscairo"
+#define DEF_SVGCAIRO	"svgcairo"
 
-using namespace std;
-namespace qi = boost::spirit::qi;
-namespace ascii = boost::spirit::ascii;
+#define DEF_SCREEN	"screen"
+#define DEF_PNG		"png"
+#define DEF_PDF		"pdf"
+#define DEF_PS		"ps"
+#define DEF_EPS		"eps"
+#define DEF_SVG		"svg"
 
 #define DEFAULT_PLOT_WIDTH	512
 #define DEFAULT_PLOT_HEIGHT	480
@@ -65,7 +78,7 @@ static int      angle_units = APL_ANGLE_RADIANS;
 static bool	killem = false;
 static int	xcol = -1;
 static string 	filename;
-static string 	target ("xcairo");;
+static string 	target (DEF_XCAIRO);;
 static unsigned char bgred = 0, bggreen = 0, bgblue = 0;
 
 string keyword;
@@ -79,6 +92,22 @@ typedef struct { std::string kwdx; option_fcn fcnx; int argx;} kwd_s;
 #define opt_kwd(i) kwds[i].kwdx
 #define opt_fcn(i) kwds[i].fcnx
 #define opt_arg(i) kwds[i].argx
+
+static void reset_options (int arg) {
+  plot_width	= DEFAULT_PLOT_WIDTH;
+  plot_height	= DEFAULT_PLOT_HEIGHT;
+  xlabel.clear ();
+  ylabel.clear ();
+  tlabel.clear ();
+  xlog		= false;
+  ylog		= false;
+  mode		= APL_MODE_XY;
+  angle_units	= APL_ANGLE_RADIANS;
+  killem	= false;
+  xcol		= -1;
+  target	= DEF_XCAIRO;
+  bgred		= bggreen = bgblue = 0;
+}
 
 static void set_width (int arg) {
   if (args.size () >= 1) istringstream (args[0]) >> plot_width;
@@ -161,25 +190,25 @@ static void set_xcol (int arg) {
 static void set_file (int arg) {
   if (args.size () >= 1) filename = args[0];
   else filename.clear ();
-  if (filename.empty () || filename.length () == 0) target = "xcairo";
+  if (filename.empty () || filename.length () == 0) target = DEF_XCAIRO;
 }
 
 static void set_dest (int arg) {
   if (args.size () >= 1) {
-    if (0 == args[0].compare ("screen"))   target = "xcairo";
-    else if (0 == args[0].compare ("png")) target = "pngcairo";
-    else if (0 == args[0].compare ("pdf")) target = "pdfcairo";
-    else if (0 == args[0].compare ("ps"))  target = "pscairo";
-    else if (0 == args[0].compare ("eps")) target = "epscairo";
-    else if (0 == args[0].compare ("svg")) target = "svgcairo";
+    if      (0 == args[0].compare (DEF_SCREEN)) target = DEF_XCAIRO;
+    else if (0 == args[0].compare (DEF_PNG))    target = DEF_PNGCAIRO;
+    else if (0 == args[0].compare (DEF_PDF))    target = DEF_PDFCAIRO;
+    else if (0 == args[0].compare (DEF_PS))     target = DEF_PSCAIRO;
+    else if (0 == args[0].compare (DEF_EPS))    target = DEF_EPSCAIRO;
+    else if (0 == args[0].compare (DEF_SVG))    target = DEF_SVGCAIRO;
     else {
       cerr << "option must be one of screen, png, pdf, svg\n";
       cerr << "eps, or ps.\n";
       cerr << "Setting destination to screen\n";
-      target = "xcairo";
+      target = DEF_XCAIRO;
     }
   }
-  else target = "xcairo";
+  else target = DEF_XCAIRO;
 }
 
 enum {APL_BG_SET, APL_BG_BLACK, APL_BG_WHITE};
@@ -229,6 +258,7 @@ kwd_s kwds[] = {
   {"xcol",		set_xcol,	0},
   {"file",		set_file,	0},
   {"dest",		set_dest,	0},
+  {"reset",		reset_options,	0},
   {"bgwhite",		set_background,	APL_BG_WHITE},
   {"bgblack",		set_background,	APL_BG_BLACK},
   {"background",	set_background,	APL_BG_SET}
@@ -347,7 +377,7 @@ run_plot_z (PLINT count,
 	    PLFLT *zvec)
 {
   plsdev (target.c_str ());
-  if (0 == target.compare ("xcairo"))  {
+  if (0 == target.compare (DEF_XCAIRO))  {
     pid_t pid = fork ();
     if (pid == 0) {		// child
       setsid ();
@@ -463,7 +493,7 @@ run_plot (APL_Float min_xv,
 	  vector<LineClass *> lines)
 {
   plsdev (target.c_str ());
-  if (0 == target.compare ("xcairo"))  {
+  if (0 == target.compare (DEF_XCAIRO))  {
     pid_t pid = fork ();
     if (pid == 0) {		// child
       setsid ();

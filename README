@@ -57,28 +57,23 @@ Example usage
 	the plot.  At the moment, these options are supported:
 
 		* 'width <value>' where <value> is an interger plot width.
-		       If the argument is omitted, the option is ignored.
+		        If the argument is omitted, the option is ignored.
 
 		* 'height <value>' where <value> is an interger plot height.
-		       If the argument is omitted, the option is ignored.
+		        If the argument is omitted, the option is ignored.
 
 		* 'dims <width> <height' combining the above into one
-		    	operation.  If either argument is omitted, the option
-			is ignored.
+		        operation.  If either argument is omitted, the option
+		        is ignored.
 
 		* 'xlabel <x-axis label>' where <> is a string to use as the 
-			x-axis label.  Enclosed in double-quotes ("") if the 
+		        x-axis label.  Enclosed in double-quotes ("") if the 
 			string contains spaces.  If the argument is omitted,
 			the label is cleared.
 
 		* 'ylabel <x-axis label>' y-axis label.
 
 		* 'tlabel <x-axis label>' top label.
-
-		* 'kill' The plot function returns the process ID (pid) of
-		         the process used to display the plot.  Given a right
-		 	 argument of those pids, the function kills those
-			 processes and closes the display windows.
 
 		* 'xlog <state>'  If the <state> is "on" or omitted, make
 		        the x-axis logarithmic.  If the state is "off," make
@@ -105,9 +100,9 @@ Example usage
 			0 - 255, inclusive.
 		
 		* 'mode <mode>'  Sets the plot mode to either polar or
-		cartesian.  <mode> is either "polar" or "xy;" if omitted,
-		defaults to cartesian.  Keywords "polar" and "xy" are
-		short-cuts to set the corresponding mode.
+		        cartesian.  <mode> is either "polar" or "xy;" if
+			omitted, defaults to cartesian.  Keywords "polar"
+			and "xy" are short-cuts to set the corresponding mode.
 
 		* 'angle_units <units>'  Sets the interpretation of theta in
 		        polar plots to degress, radians, or pi-radians.  Any
@@ -115,12 +110,26 @@ Example usage
 			you expect; if the argument is omitted, it defaults to
 			radians.  "degrees," "radians," and "piradians" are
 			short-cuts to the corresponding settings.
+		
+		* 'reset'  Resets all persistent options to default values.
+		        It's equivalent to:
+			  'dims 512 480; xlabel; ylabel; tlabel;
+			     xlog off; ylog off; xcol -1; dest screen;
+			     bgblack; mode xy; radians'
+
+		* 'kill' The plot function returns the process ID (pid) of
+		        the process used to display the plot.  Given a right
+		 	argument of those pids, the function kills those
+			processes and closes the display windows.
+
+		All options except "kill" and 'reset' are retained and need
+		not be set for subsequent plots. The construct
+
+			   'options' plot ''
+			   
+		can be used to store options without creating a plot.
 
 		Other options will be added as time goes on.
-
-		All options except "kill" are retained and need not be set for
-		subsequent plots. 'options' plot '' can be used to store
-		options without creating a plot.
 
 
 	The plot function spawns and detaches processes to display the plots;
