@@ -124,12 +124,7 @@ Example usage
 
 
 	The plot function spawns and detaches processes to display the plots;
-	as many plots as you like can be displayed simultaneously.  At present,
-	the displays are created using the ImageMagick 'display' utility;
-	right-clicking in the window brings up a menu that provides a number
-	of capabilities, including that of saving the image in a variety of
-	formats.  (Future enhancements of the function will likely include an
-	ability to save the plots in scalable, publishable, formats.)
+	as many plots as you like can be displayed simultaneously.
 
 
 
