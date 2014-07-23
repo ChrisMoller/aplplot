@@ -53,8 +53,8 @@ Example usage
 
 	  'options' plot a
 
-	Like above but with a semicolon list of options to control the plot.
-	At the moment, these options are supported:
+	Like above but with a semicolon-separated list of options to control the 
+	plot.  At the moment, these options are supported:
 
 		* 'width <value>' where <value> is an interger plot width.
 		       If the argument is omitted, the option is ignored.
