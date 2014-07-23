@@ -25,6 +25,7 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <math.h>
 #include <signal.h>
 #include <values.h>
 #include <plplot/plplot.h>
@@ -48,6 +49,10 @@ namespace ascii = boost::spirit::ascii;
 #define DEFAULT_PLOT_WIDTH	512
 #define DEFAULT_PLOT_HEIGHT	480
 
+enum {APL_MODE_SET, APL_MODE_XY, APL_MODE_POLAR };
+enum {APL_ANGLE_SET, APL_ANGLE_DEGREES,
+      APL_ANGLE_RADIANS, APL_ANGLE_PI_RADIANS };
+
 static int 	plot_width  = DEFAULT_PLOT_WIDTH;
 static int	plot_height = DEFAULT_PLOT_HEIGHT;
 static string	xlabel;
@@ -55,10 +60,12 @@ static string	ylabel;
 static string	tlabel;
 static bool	xlog = false;
 static bool	ylog = false;
+static int	mode = APL_MODE_XY;
+static int      angle_units = APL_ANGLE_RADIANS;
 static bool	killem = false;
 static int	xcol = -1;
 static string 	filename;
-static string 	target;
+static string 	target ("xcairo");;
 static unsigned char bgred = 0, bggreen = 0, bgblue = 0;
 
 string keyword;
@@ -112,6 +119,39 @@ static void set_xlog (int arg) {
 static void set_ylog (int arg) {
   ylog = (args.size () >= 1 && 0 == args[0].compare ("off")) ? false : true;
 }
+
+static void set_mode (int arg) {
+  if (arg == APL_MODE_SET)
+    mode = (args.size () >= 1 && 0 == args[0].compare ("polar"))
+      ? APL_MODE_POLAR : APL_MODE_XY;
+  else 
+    mode = arg;
+}
+
+static void set_angle (int arg) {
+  if (arg== APL_ANGLE_SET) {
+    if (args.size () >= 1) {
+      switch (*(args[0].c_str ())) {
+      case 'd':
+      case 'D':
+	angle_units = APL_ANGLE_DEGREES;
+	break;
+      case 'r':
+      case 'R':
+	angle_units = APL_ANGLE_RADIANS;
+	break;
+      case 'p':
+      case 'P':
+	angle_units = APL_ANGLE_PI_RADIANS;
+	break;
+      default:
+	cerr << "Unrecognised angle unit " << args[0] << endl;
+	break;
+      }
+    }
+  } else angle_units = arg;
+}
+
 
 static void set_xcol (int arg) {
   if (args.size () >= 1) istringstream (args[0]) >> xcol;
@@ -178,6 +218,14 @@ kwd_s kwds[] = {
   {"logx",		set_xlog,	0},
   {"ylog",		set_ylog,	0},
   {"logy",		set_ylog,	0},
+  {"mode",		set_mode,	APL_MODE_SET},
+  {"polar",		set_mode,	APL_MODE_POLAR},
+  {"xy",		set_mode,	APL_MODE_XY},
+  {"angle",		set_angle,	APL_ANGLE_SET},
+  {"angle_unit",	set_angle,	APL_ANGLE_SET},
+  {"degrees",		set_angle,	APL_ANGLE_DEGREES},
+  {"radians",		set_angle,	APL_ANGLE_RADIANS},
+  {"piradians",		set_angle,	APL_ANGLE_PI_RADIANS},
   {"xcol",		set_xcol,	0},
   {"file",		set_file,	0},
   {"dest",		set_dest,	0},
@@ -340,6 +388,44 @@ run_plot_z (PLINT count,
 }
 
 static void
+draw_polar_grid (APL_Float min_xv,
+		 APL_Float max_xv,
+		 APL_Float min_yv,
+		 APL_Float max_yv)
+{
+  double i;
+  double lv;
+  double fp, ep;
+  APL_Float radx = fmax (fabs (min_xv), fabs (max_xv));
+  APL_Float rady = fmax (fabs (min_yv), fabs (max_yv));
+  APL_Float rad  = fmax (radx, rady);
+
+  lv = log10 (rad);
+  ep = trunc (lv);
+  fp = lv - ep;
+  fp = exp10 (fp);
+  fp = trunc (10.0 * fp) / 10.0;
+  fp = round (fp);
+  rad = fp * exp10 (ep);
+
+  plwidth (0.65);		// fixme make settable
+  for(i = 0.1; i <= 1.1; i += 0.1) {
+    plarc(0.0, 0.0, i * rad, i * rad, 0.0, 360.0, 0.0, 0);
+
+    char buffer[64];
+    snprintf(buffer, sizeof(buffer), "%f", i * fp);
+    plptex( i * rad, rad / 50.0, 0.0, 10.0, 0, buffer);
+    plptex(-i * rad, rad / 50.0, 0.0, 10.0, 1, buffer);
+  }
+
+  for(i = 0.0; i < 8.0; i += 1.0) {
+    double ang = (i / 8.0) * 2.0 * M_PI;
+    pljoin (0.0, 0.0, 1.1 * rad * cos (ang), 1.1 * rad * sin (ang));
+  }
+  plwidth (1.0);
+}
+
+static void
 render_xy (APL_Float min_xv,
 	   APL_Float max_xv,
 	   APL_Float min_yv,
@@ -349,17 +435,21 @@ render_xy (APL_Float min_xv,
   plspage (0.0,  0.0, plot_width, plot_height, 0.0, 0.0);
   plscolbg (bgred, bggreen, bgblue);
   plinit ();
-  plenv (min_xv, max_xv, min_yv, max_yv, 0,
-	 (xlog ? 10 : 0) + (ylog ? 20 : 0));
+
+  int axis_val = (mode == APL_MODE_XY) 
+    ? ((xlog ? 10 : 0) + (ylog ? 20 : 0)) : -2;
+  plenv (min_xv, max_xv, min_yv, max_yv, 0, axis_val);
+  if (mode != APL_MODE_XY) draw_polar_grid (min_xv, max_xv, min_yv, max_yv);
 
   pllab (xlabel.empty () ? "" : xlabel.c_str (),
 	 ylabel.empty () ? "" : ylabel.c_str (),
 	 tlabel.empty () ? "" : tlabel.c_str ());
 
   for (int i = 0; i < lines.size (); i++) {
-    plcol0 (1 + i % 15);
+    plcol0 (2 + i % 14);
     plline (lines[i]->count, lines[i]->xvec, lines[i]->yvec);
   }
+  plcol0 (1);
 }
 
 static int
@@ -430,6 +520,30 @@ killAllChildProcess(int ppid)
   return;
 }
 
+static void
+polarise (APL_Float *xv, APL_Float *yv)
+{
+  if (!xv || !yv) return;
+  
+  APL_Float tx = *xv; 
+  APL_Float ty = *yv;
+  
+  switch (angle_units) {
+  case APL_ANGLE_DEGREES:
+    *xv = ty * cos (tx * M_PI / 180.0);
+    *yv = ty * sin (tx * M_PI / 180.0);
+    break;
+  case APL_ANGLE_RADIANS:
+    *xv = ty * cos (tx);
+    *yv = ty * sin (tx);
+    break;
+  case APL_ANGLE_PI_RADIANS:
+    *xv = ty * cos (tx * M_PI);
+    *yv = ty * sin (tx * M_PI);
+    break;
+  }
+}
+
 static int
 plot_xy (ShapeItem pxcol, Value_P B)
 {
@@ -463,6 +577,8 @@ plot_xy (ShapeItem pxcol, Value_P B)
       yv = cell_By.get_real_value ();
       if (ylog) yv = log (yv);
 
+      polarise (&xv, &yv);
+
       if (min_xv > xv) min_xv = xv;
       if (max_xv < xv) max_xv = xv;
       if (min_yv > yv) min_yv = yv;
@@ -479,8 +595,6 @@ plot_xy (ShapeItem pxcol, Value_P B)
   pid = run_plot (min_xv, max_xv, min_yv, max_yv, lines);
 
   
-  //delete [] xvec;
-  //delete [] yvec;
   for (int i = 0; i < lines.size (); i++)
     delete lines[i];
   
@@ -507,6 +621,8 @@ plot_y (Value_P B)
     xv = (APL_Float)p;
     yv = cell_B.get_real_value ();
     if (ylog) yv = log (yv);
+    
+    polarise (&xv, &yv);
     
     if (min_xv > xv) min_xv = xv;
     if (max_xv < xv) max_xv = xv;
