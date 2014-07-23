@@ -148,7 +148,7 @@ static void set_angle (int arg) {
 	cerr << "Unrecognised angle unit " << args[0] << endl;
 	break;
       }
-    }
+    } else angle_units = APL_ANGLE_DEGREES;
   } else angle_units = arg;
 }
 
@@ -399,6 +399,7 @@ draw_polar_grid (APL_Float min_xv,
   APL_Float radx = fmax (fabs (min_xv), fabs (max_xv));
   APL_Float rady = fmax (fabs (min_yv), fabs (max_yv));
   APL_Float rad  = fmax (radx, rady);
+  char buffer[64];
 
   lv = log10 (rad);
   ep = trunc (lv);
@@ -409,13 +410,15 @@ draw_polar_grid (APL_Float min_xv,
   rad = fp * exp10 (ep);
 
   plwidth (0.65);		// fixme make settable
+
+  snprintf(buffer, sizeof(buffer), "x 10#u%d#d", (int)ep);
+  plmtex ("lv", 1.0, 0.9, 1.00, buffer);
   for(i = 0.1; i <= 1.1; i += 0.1) {
     plarc(0.0, 0.0, i * rad, i * rad, 0.0, 360.0, 0.0, 0);
 
-    char buffer[64];
-    snprintf(buffer, sizeof(buffer), "%f", i * fp);
+    snprintf(buffer, sizeof(buffer), "%3.1f", i * fp);
     plptex( i * rad, rad / 50.0, 0.0, 10.0, 0, buffer);
-    plptex(-i * rad, rad / 50.0, 0.0, 10.0, 1, buffer);
+    plptex(-i * rad, rad / 50.0, 0.0, 10.0, 0, buffer);
   }
 
   for(i = 0.0; i < 8.0; i += 1.0) {
@@ -577,7 +580,7 @@ plot_xy (ShapeItem pxcol, Value_P B)
       yv = cell_By.get_real_value ();
       if (ylog) yv = log (yv);
 
-      polarise (&xv, &yv);
+      if (mode != APL_MODE_XY) polarise (&xv, &yv);
 
       if (min_xv > xv) min_xv = xv;
       if (max_xv < xv) max_xv = xv;
@@ -622,7 +625,7 @@ plot_y (Value_P B)
     yv = cell_B.get_real_value ();
     if (ylog) yv = log (yv);
     
-    polarise (&xv, &yv);
+    if (mode != APL_MODE_XY) polarise (&xv, &yv);
     
     if (min_xv > xv) min_xv = xv;
     if (max_xv < xv) max_xv = xv;
