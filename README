@@ -4,37 +4,14 @@ aplplot
 A GNU APL extension that provides plotting capability
 
 
-Build and installation:
+For build and installation instructions, see the INSTALL file.
 
-  1. git clone https://github.com/ChrisMoller/aplplot.git
-
-  2. cd aplplot
-
-  3. edit configure.ac to set APL_SOURCES=-I../../../../apl-1.3/src/native 
-	to the right place
-
-  4. ./autogen.sh
-
-  5. make
-
-  6. sudo make install
-
-
-Testing/demos
-
-  1. start APL
-
-  2. )load plotsincos
-
-  3. plotsincos
-
-  4. plotcomplex
-
-
-
-Example usage
+To use the aplplot package, you need associate the library with an APL function 
+name:
 
 	 'libaplplot.so' quad-FX  'plot'
+
+after which you can use it just like any other function:
 
 	   plot a
 
@@ -50,6 +27,7 @@ Example usage
 		Other capabilities will be added as time goes on.
 
 
+Options may be passed to the functions using a left argument:
 
 	  'options' plot a
 

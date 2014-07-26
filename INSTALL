@@ -1,0 +1,34 @@
+
+
+To install aplplot, it's necessary to have a copy of the GNU APL source code 
+installed at least for the duration of the installation of aplplot.  The GNU 
+APL source can be discarded after aplwrap is installed.  The configure step 
+below must be specified with something like:
+
+./configure --with-apl-source-dir=/mnt/disk5/home/moller/tinkering/aplplot/apl-1.3
+
+aplwrap requires GTK+ version 3.0.12 or newer, including the development
+package (like gtk3-devel) if your distribution separates that from the GTK+
+library package.
+
+Once the above is in place:
+
+	./configure --with-apl-source-dir=<GNU APL source directory>
+	make
+	sudo make install
+
+
+You can test the installation with the following:
+
+  1. start APL
+
+  2. )load plotsincos
+
+  3. plotsincos
+
+  4. plotcomplex
+
+
+
+Any complaints or suggestions:  moller@mollerware.com
+
