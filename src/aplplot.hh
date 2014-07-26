@@ -22,7 +22,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "../Native_interface.hh"
+#include <src/Native_interface.hh>
 
 /**
    This file demonstrates how to write native APL functions. A native

@@ -9,8 +9,15 @@ AC_PROG_CXX
 AM_PROG_AR
 AM_PROG_LIBTOOL
 
-# this has to point into the GNU apl source tree
-APL_SOURCES=-I../../../apl-1.3/src/native
+AC_ARG_WITH(apl-source-dir,
+        AC_HELP_STRING(
+                [--with-apl-source-dir],
+                [APL source directory]),
+        [APL_SOURCES=$withval],
+        [echo "";
+echo "apl-source-dir must be specified and point to the GNU APL source tree.";
+echo ""; exit])
+
 AC_SUBST(APL_SOURCES)
 
 # Not using this any more, but I'll leave this here just in case
