@@ -283,7 +283,7 @@ static void set_domain (int arg) {
     if (args.size () > 1) {
       rem = NULL;
       xspan	= strtod (args[1].c_str (), &rem);
-    if (rem && (*rem == 'p' || *rem == 'P')) xspan *= M_PI;
+      if (rem && (*rem == 'p' || *rem == 'P')) xspan *= M_PI;
     }
     else xspan	= -1.0;
   }
