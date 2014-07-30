@@ -724,7 +724,7 @@ eval_B(Value_P B)
   
   const ShapeItem count    = B->element_count();
   const Rank      rank     = B->get_rank();
-  const CellType  celltype = B->compute_cell_types();
+  const CellType  celltype = B->deep_cell_types();
 
   if (!hdlr_set) {
     signal (SIGCHLD, sigchld_handler);
@@ -790,7 +790,7 @@ eval_B(Value_P B)
 	  killAllChildProcess ((int)vv);
 	}
 	killem = false;
-	return Token(TOK_APL_VALUE1, Value::Str0_0_P);
+	return Token(TOK_APL_VALUE1, Str0_0 (LOC));
       }
       switch (rank) {
       case 1:			// simple xy graph w/ 0-based indices
@@ -812,11 +812,11 @@ eval_B(Value_P B)
   if (pid != 0) {
     const IntCell apid ((APL_Integer)pid);
     Value_P Z(new Value(apid, LOC));
-    Z->set_default(*Value::Zero_P);
+    Z->set_default_Zero ();
     Z->check_value(LOC);
     return Token(TOK_APL_VALUE1, Z);
   }
-  else return Token(TOK_APL_VALUE1, Value::Str0_0_P);
+  else return Token(TOK_APL_VALUE1, Str0_0 (LOC));
 }
 
 static void
@@ -888,10 +888,12 @@ eval_AB(Value_P A, Value_P B)
 
    if (A->is_char_string()) {
      //const ShapeItem count    = A->element_count();
-     //const UCS_string ustr    = A->get_UCS_ravel();		// unicode
+     const UCS_string  ustr	= A->get_UCS_ravel();		// unicode
+     const UTF8_string utf (ustr);
+     const string sstr ((const char *)(utf.get_items()), utf.size());
      //const Rank       rank    = A->get_rank();
      
-     const string     sstr    = A->get_UCS_ravel().to_string (); // utf8
+     //     const string     sstr    = A->get_UCS_ravel().to_string (); // utf8
 
      using boost::spirit::ascii::space;
      typedef string::const_iterator iterator_type;
@@ -911,7 +913,7 @@ eval_AB(Value_P A, Value_P B)
    }
 
    Token rt = B->is_empty () ?
-     Token(TOK_APL_VALUE1, Value::Str0_0_P) : eval_B (B);
+     Token(TOK_APL_VALUE1, Str0_0 (LOC)) : eval_B (B);
    return rt;
 }
 

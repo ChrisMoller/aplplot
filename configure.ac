@@ -1,31 +1,19 @@
 AC_INIT([APL plot native function], [1.0], [moller@mollerware.com],[aplplot])
+AC_PREFIX_DEFAULT( /usr/local )
+AC_USE_SYSTEM_EXTENSIONS
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AM_MAINTAINER_MODE([enable])
 
-#AC_PROG_CC
 AC_PROG_CXX
 AM_PROG_AR
 AM_PROG_LIBTOOL
 
-AC_ARG_WITH(apl-source-dir,
-        AC_HELP_STRING(
-                [--with-apl-source-dir],
-                [APL source directory]),
-        [APL_SOURCES=$withval],
-        [echo "";
-echo "apl-source-dir must be specified and point to the GNU APL source tree.";
-echo ""; exit])
+libdir=$libdir/apl
 
+APL_SOURCES=`apl --show_src_dir`
 AC_SUBST(APL_SOURCES)
-
-# Not using this any more, but I'll leave this here just in case
-#AC_CHECK_PROG([IMG_DISPLAY], [display], [yes], [])
-#m4_ifblank([$IMG_DISPLAY],
-#  [echo "$IMG_DISPLAY";
-#  echo ">>>> You need to install the ImageMagick package. <<<<";
-#  echo ""; exit])
 
 # AC_CHECK_HEADERS tries to compile the header but uses C instead of C++
 # maybe an autoconf expert knows how to make it work right
