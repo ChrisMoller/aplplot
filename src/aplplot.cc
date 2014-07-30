@@ -87,6 +87,8 @@ static int	draw		= APL_DRAW_LINES;
 static string 	filename;
 static string 	target (DEF_XCAIRO);;
 static unsigned char bgred = 0, bggreen = 0, bgblue = 0;
+static double	xorigin		= 0.0;
+static double	xspan		= -1.0;
 
 string keyword;
 vector<string> args;
@@ -115,6 +117,8 @@ static void reset_options (int arg) {
   draw		= APL_DRAW_LINES;
   target	= DEF_XCAIRO;
   bgred		= bggreen = bgblue = 0;
+  xorigin	= 0.0;
+  xspan		= -1.0;
 }
 
 static void set_width (int arg) {
@@ -267,6 +271,24 @@ static void set_background (int arg) {
   }
 }
 
+static void set_domain (int arg) {
+  if (args.size () <= 0) {
+    xorigin	= 0.0;
+    xspan	= -1.0;
+  }
+  else {
+    char *rem = NULL;
+    xorigin	= strtod (args[0].c_str (), &rem);
+    if (rem && (*rem == 'p' || *rem == 'P')) xorigin *= M_PI;
+    if (args.size () > 1) {
+      rem = NULL;
+      xspan	= strtod (args[1].c_str (), &rem);
+    if (rem && (*rem == 'p' || *rem == 'P')) xspan *= M_PI;
+    }
+    else xspan	= -1.0;
+  }
+}
+
 kwd_s kwds[] = {
   {"width",		set_width,	0},
   {"height",		set_height,	0},
@@ -295,6 +317,7 @@ kwd_s kwds[] = {
   {"file",		set_file,	0},
   {"dest",		set_dest,	0},
   {"reset",		reset_options,	0},
+  {"xdomain",		set_domain,	0},
   {"bgwhite",		set_background,	APL_BG_WHITE},
   {"bgblack",		set_background,	APL_BG_BLACK},
   {"background",	set_background,	APL_BG_SET}
@@ -417,11 +440,6 @@ run_plot_z (PLINT count,
     pid_t pid = fork ();
     if (pid == 0) {		// child
       setsid ();
-#ifdef USE_IMAGEMAGICK_DISPLAY
-      FILE *po = popen ("display /dev/stdin", "w");
-      plsfile (po);
-      plsdev ("pngcairo");
-#endif
     
       render_z (count,
 		min_xv, max_xv,
@@ -537,11 +555,6 @@ run_plot (APL_Float min_xv,
     pid_t pid = fork ();
     if (pid == 0) {		// child
       setsid ();
-#ifdef USE_IMAGEMAGICK_DISPLAY
-	FILE *po = popen ("display /dev/stdin", "w");
-	plsfile (po);
-	plsdev ("pngcairo");
-#endif
     
 	render_xy (min_xv, max_xv, min_yv, max_yv, lines);
     
