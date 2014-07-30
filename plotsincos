@@ -1,0 +1,4 @@
+)load plotsincos
+plotsincos
+plotfile
+)off
