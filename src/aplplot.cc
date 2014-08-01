@@ -323,8 +323,6 @@ kwd_s kwds[] = {
   {"background",	set_background,	APL_BG_SET}
 };
 
-static int hdlr_set    = 0;
-
 class LineClass {
 public:
   LineClass (PLINT c, PLFLT *x,  PLFLT *y) {
@@ -335,13 +333,6 @@ public:
   PLFLT *xvec;
   PLFLT *yvec;
 };
-
-static void
-sigchld_handler (int sig)
-{
-  int status;
-  waitpid (-1, &status, WNOHANG);
-}
 
 void *
 get_function_mux(const char * function_name)
@@ -448,6 +439,7 @@ run_plot_z (PLINT count,
 		xvec, yvec, zvec);
 
       plend ();
+      wait (NULL);
       exit (0);
     }
     return (int)pid;
@@ -559,6 +551,7 @@ run_plot (APL_Float min_xv,
 	render_xy (min_xv, max_xv, min_yv, max_yv, lines);
     
 	plend ();
+	wait (NULL);
 	exit (0);
       }
       return (int)pid;
@@ -655,9 +648,12 @@ plot_xy (ShapeItem pxcol, Value_P B)
       if (pxcol != -1) {
 	const Cell & cell_Bx = B->get_ravel (pxcol + p * cols);
 	xv = cell_Bx.get_real_value ();
-	if (xlog) xv = log (xv);
       }
-      else xv = (APL_Float)p;
+      else {
+	//	xv = (APL_Float)p;
+	xv = xorigin + (xspan - xorigin) * (double)p / (double)rows;
+      }
+      if (xlog) xv = log (xv);
       
       const Cell & cell_By = B->get_ravel (q + p * cols);
       yv = cell_By.get_real_value ();
@@ -739,11 +735,6 @@ eval_B(Value_P B)
   const Rank      rank     = B->get_rank();
   const CellType  celltype = B->deep_cell_types();
 
-  if (!hdlr_set) {
-    signal (SIGCHLD, sigchld_handler);
-    hdlr_set = 1;
-  }
-  
   if (!(celltype & ~CT_NUMERIC)) {
     if (celltype &  CT_COMPLEX) {
       if (rank == 1) {  // simple polar graph
