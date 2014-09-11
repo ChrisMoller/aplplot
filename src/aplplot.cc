@@ -28,6 +28,7 @@
 #include <math.h>
 #include <signal.h>
 #include <values.h>
+#include <fcntl.h>
 #include <plplot/plplot.h>
 
 using namespace std;
@@ -85,10 +86,12 @@ static bool	killem		= false;
 static int	xcol		= -1;
 static int	draw		= APL_DRAW_LINES;
 static string 	filename;
-static string 	target (DEF_XCAIRO);;
+static bool     embed		= false;
+static string 	target (DEF_XCAIRO);
 static unsigned char bgred = 0, bggreen = 0, bgblue = 0;
 static double	xorigin		= 0.0;
 static double	xspan		= -1.0;
+static int      plot_pipe_fd = -1;
 
 string keyword;
 vector<string> args;
@@ -119,6 +122,7 @@ static void reset_options (int arg) {
   bgred		= bggreen = bgblue = 0;
   xorigin	= 0.0;
   xspan		= -1.0;
+  embed		= false;
 }
 
 static void set_width (int arg) {
@@ -152,6 +156,11 @@ static void set_tlabel (int arg) {
 }
 
 static void set_killem (int arg) { killem = true; }
+
+static void set_embed (int arg) {
+  embed = (args.size () >= 1 && 0 == args[0].compare ("off")) ? false : true;
+  if (embed) target = DEF_PNGCAIRO;
+}
 
 static void set_xlog (int arg) {
   xlog = (args.size () >= 1 && 0 == args[0].compare ("off")) ? false : true;
@@ -315,6 +324,7 @@ kwd_s kwds[] = {
   {"points",		set_draw,	APL_DRAW_POINTS},
   {"both",		set_draw,	APL_DRAW_BOTH},
   {"file",		set_file,	0},
+  {"embed",		set_embed,	0},
   {"dest",		set_dest,	0},
   {"reset",		reset_options,	0},
   {"xdomain",		set_domain,	0},
@@ -414,6 +424,28 @@ render_z (PLINT count,
   plline3 (count, xvec, yvec, zvec);
 }
 
+static FILE *
+open_file (char **tfile_p)
+{
+  FILE *rf;
+  *tfile_p = NULL;
+  if (embed) {
+    if (plot_pipe_fd != -1) {
+#define TEMPORARY_IMAGE_FILE "/tmp/aplplot-image.XXXXXX"
+      *tfile_p = strdup (TEMPORARY_IMAGE_FILE);
+      if (*tfile_p) {
+	int tfd = mkstemp (*tfile_p);
+	rf = fdopen (tfd, "w");
+      }
+    }
+  }
+  else {
+    if (!filename.empty ()) rf = fopen (filename.c_str (), "w");
+    else cerr << "missing filename\n";
+  }
+  return rf;
+}
+
 static int
 run_plot_z (PLINT count,
 	    APL_Float min_xv,
@@ -426,6 +458,7 @@ run_plot_z (PLINT count,
 	    PLFLT *yvec,
 	    PLFLT *zvec)
 {
+  plspage (0.0,  0.0, plot_width, plot_height, 0.0, 0.0);
   plsdev (target.c_str ());
   if (0 == target.compare (DEF_XCAIRO))  {
     pid_t pid = fork ();
@@ -445,20 +478,25 @@ run_plot_z (PLINT count,
     return (int)pid;
   }
   else {
-    if (!filename.empty ()) {
-      FILE *po = fopen (filename.c_str (), "w");
-      if (po) {
-	plsfile (po);
-	render_z (count,
-		  min_xv, max_xv,
-		  min_yv, max_yv,
-		  min_zv, max_zv,
-		  xvec, yvec, zvec);
-	plend ();
+    char *tfile = NULL;
+    FILE *po = open_file (&tfile);
+
+    if (po) {
+      plsfile (po);
+      render_z (count,
+		min_xv, max_xv,
+		min_yv, max_yv,
+		min_zv, max_zv,
+		xvec, yvec, zvec);
+      plend ();
+      if (embed) {
+	write (plot_pipe_fd, tfile, strlen (tfile));
+	syncfs (plot_pipe_fd);
+	usleep (50000);
       }
-      else cerr << "file \"" << filename << "\" could not be opened.\n";
+      if (tfile) free (tfile);
     }
-    else cerr << "missing filename\n";
+    else cerr << "output file could not be opened.\n";
     return 0;
   }
 }
@@ -557,16 +595,19 @@ run_plot (APL_Float min_xv,
       return (int)pid;
     }
   else {
-    if (!filename.empty ()) {
-      FILE *po = fopen (filename.c_str (), "w");
-      if (po) {
-	plsfile (po);
-	render_xy (min_xv, max_xv, min_yv, max_yv, lines);
-	plend ();
-      }
-      else cerr << "file \"" << filename << "\" could not be opened.\n";
+    char *tfile = NULL;
+    FILE *po = open_file (&tfile);
+    if (po) {
+      plsfile (po);
+      render_xy (min_xv, max_xv, min_yv, max_yv, lines);
+      plend ();
     }
-    else cerr << "missing filename\n";
+    if (embed) {
+      write (plot_pipe_fd, tfile, strlen (tfile));
+      syncfs (plot_pipe_fd);
+      usleep (50000);
+    }
+    if (tfile) free (tfile);
     return 0;
   }
 }
@@ -726,6 +767,67 @@ plot_y (Value_P B)
   return pid;
 }
 
+static void
+handle_opts ()
+{
+  if (keyword.empty ()) return;
+
+  if (kwd_map.empty ())
+    for (int i = 0; i < sizeof (kwds) / sizeof (kwd_s); i++)
+      kwd_map [opt_kwd (i)] = i;
+
+  if (kwd_map.find (keyword) != kwd_map.end ()) {
+    int idx = -1;
+    idx = kwd_map.at (keyword);
+    if (idx >= 0) (*opt_fcn (idx))(opt_arg (idx));
+  }
+  else {
+    cerr << "invalid option " << keyword << endl;
+    // fixme -- complain abt bad kwd
+  }
+  
+  keyword.clear ();
+  args.clear ();
+}
+
+static void
+set_kwd (string const& str)
+{
+  keyword = str;
+}
+
+static void
+append_arg (string const& str)
+{
+  args.push_back (str);
+}
+
+template <typename Iterator>
+struct option_parser : qi::grammar<Iterator, ascii::space_type> {
+  option_parser() : option_parser::base_type(start) {
+    using qi::int_;
+    using qi::lit;
+    using qi::lexeme;
+    using ascii::char_;
+
+    keyword_string  %= lexeme[+char_("0-9a-zA-Z_")];
+    unquoted_string %= lexeme[+(char_ - ' ' - ';')];
+    quoted_string   %= lexeme['"' >> +(char_ - '"') >> '"'];
+    any_string      %= quoted_string | unquoted_string;
+
+    start %= keyword_string[&set_kwd]
+      >> *any_string[&append_arg]
+      >> *( ',' >> any_string[&append_arg] )
+      >> ';' ;
+  }
+
+  qi::rule<Iterator, string(), ascii::space_type> any_string;
+  qi::rule<Iterator, string(), ascii::space_type> keyword_string;
+  qi::rule<Iterator, string(), ascii::space_type> unquoted_string;
+  qi::rule<Iterator, string(), ascii::space_type> quoted_string;
+  qi::rule<Iterator,           ascii::space_type> start;
+};
+
 static Token
 eval_B(Value_P B)
 {
@@ -823,72 +925,17 @@ eval_B(Value_P B)
   else return Token(TOK_APL_VALUE1, Str0_0 (LOC));
 }
 
-static void
-handle_opts ()
-{
-  if (keyword.empty ()) return;
-
-  if (kwd_map.empty ())
-    for (int i = 0; i < sizeof (kwds) / sizeof (kwd_s); i++)
-      kwd_map [opt_kwd (i)] = i;
-
-  if (kwd_map.find (keyword) != kwd_map.end ()) {
-    int idx = -1;
-    idx = kwd_map.at (keyword);
-    if (idx >= 0) (*opt_fcn (idx))(opt_arg (idx));
-  }
-  else {
-    cerr << "invalid option " << keyword << endl;
-    // fixme -- complain abt bad kwd
-  }
-  
-  keyword.clear ();
-  args.clear ();
-}
-
-static void
-set_kwd (string const& str)
-{
-  keyword = str;
-}
-
-static void
-append_arg (string const& str)
-{
-  args.push_back (str);
-}
-
-template <typename Iterator>
-struct option_parser : qi::grammar<Iterator, ascii::space_type> {
-  option_parser() : option_parser::base_type(start) {
-    using qi::int_;
-    using qi::lit;
-    using qi::lexeme;
-    using ascii::char_;
-
-    keyword_string  %= lexeme[+char_("0-9a-zA-Z_")];
-    unquoted_string %= lexeme[+(char_ - ' ' - ';')];
-    quoted_string   %= lexeme['"' >> +(char_ - '"') >> '"'];
-    any_string      %= quoted_string | unquoted_string;
-
-    start %= keyword_string[&set_kwd]
-      >> *any_string[&append_arg]
-      >> *( ',' >> any_string[&append_arg] )
-      >> ';' ;
-  }
-
-  qi::rule<Iterator, string(), ascii::space_type> any_string;
-  qi::rule<Iterator, string(), ascii::space_type> keyword_string;
-  qi::rule<Iterator, string(), ascii::space_type> unquoted_string;
-  qi::rule<Iterator, string(), ascii::space_type> quoted_string;
-  qi::rule<Iterator,           ascii::space_type> start;
-};
-
 static Token
 eval_AB(Value_P A, Value_P B)
 {
    using namespace std;
    using namespace boost;
+
+   if (plot_pipe_fd == -1) {
+     char *plot_pipe_name = getenv ("APLPLOT");
+     if (plot_pipe_name) 
+       plot_pipe_fd = open (plot_pipe_name, O_WRONLY);
+   }
 
    if (A->is_char_string()) {
      //const ShapeItem count    = A->element_count();
