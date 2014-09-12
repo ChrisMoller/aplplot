@@ -93,12 +93,31 @@ Options may be passed to the functions using a left argument:
 		        It's equivalent to:
 			  'dims 512 480; xlabel; ylabel; tlabel;
 			     xlog off; ylog off; xcol -1; dest screen;
-			     bgblack; mode xy; radians'
+			     bgblack; mode xy; radians; embed off'
 
 		* 'kill' The plot function returns the process ID (pid) of
 		        the process used to display the plot.  Given a right
 		 	argument of those pids, the function kills those
 			processes and closes the display windows.
+
+		* 'embed <state>' If the <state> is "on" or omitted, embed
+		        plots in the transcript.  If the state is "off,"
+			display plots normally.
+
+		* 'draw <option>'  Sets the drawing mode to lines, points,
+		  	or both, depending on the initial letter, 'l', 'p',
+			'b', upper or lower case, of the argument.  If the
+			argument is omitted, it defaults to lines.  "lins,"
+			"points," or "both" are synonyms.
+
+		* 'xdomain <v1> <v2>'  Sets the default X domain, for XY
+		  	 plots, or the theta domain for polar plots.  <v1> is
+			 the initial value; <v2> is the span relative to the
+			 initial value.  Both values may have a 'p' or a 'P'
+			 appended, which has the effect of multiplying the
+			 value by pi.  If either argument is omitted, the
+			 origin defaults to 0 and the span is derived from
+			 shape of the array being plotted.
 
 		All options except "kill" and 'reset' are retained and need
 		not be set for subsequent plots. The construct
