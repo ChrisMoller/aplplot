@@ -260,13 +260,13 @@ enum {APL_BG_SET, APL_BG_BLACK, APL_BG_WHITE};
 
 static void set_background (int arg) {
   switch (arg) {
-  case APL_BG_SET:
+  case APL_BG_WHITE:
     bgred = 255; bggreen = 255; bgblue = 255;
     break;
   case APL_BG_BLACK:
     bgred = 0; bggreen = 0, bgblue = 0;
     break;
-  case APL_BG_WHITE:
+  case APL_BG_SET:
      if (args.size () >= 3) {
       int r,g,b;
       istringstream (args[0]) >> r;
