@@ -915,14 +915,7 @@ eval_B(Value_P B)
     // non numeric error
   }
 
-  if (pid != 0) {
-    const IntCell apid ((APL_Integer)pid);
-    Value_P Z(new Value(apid, LOC));
-    Z->set_default_Zero ();
-    Z->check_value(LOC);
-    return Token(TOK_APL_VALUE1, Z);
-  }
-  else return Token(TOK_APL_VALUE1, Str0_0 (LOC));
+  return Token(TOK_APL_VALUE1, IntScalar (pid, LOC));
 }
 
 static Token
@@ -941,7 +934,8 @@ eval_AB(Value_P A, Value_P B)
      //const ShapeItem count    = A->element_count();
      const UCS_string  ustr	= A->get_UCS_ravel();		// unicode
      const UTF8_string utf (ustr);
-     const string sstr ((const char *)(utf.get_items()), utf.size());
+     const string sstr (utf.c_str ());
+     //     const string sstr ((const char *)(utf.get_items()), utf.size());
      //const Rank       rank    = A->get_rank();
      
      //     const string     sstr    = A->get_UCS_ravel().to_string (); // utf8
@@ -971,47 +965,37 @@ eval_AB(Value_P A, Value_P B)
 static Token
 eval_XB(Value_P X, Value_P B)
 {
-UCS_string ucs("aplplot eval_XB() called");
-Value_P Z(new Value(ucs, LOC));
-   Z->check_value(LOC);
-   return Token(TOK_APL_VALUE1, Z);
+  int64_t rc = 0;
+  return Token(TOK_APL_VALUE1, rc);
 }
 
 static Token
 eval_AXB(Value_P A, Value_P X, Value_P B)
 {
-UCS_string ucs("aplplot eval_AXB() called");
-Value_P Z(new Value(ucs, LOC));
-   Z->check_value(LOC);
-   return Token(TOK_APL_VALUE1, Z);
+  int64_t rc = 0;
+  return Token(TOK_APL_VALUE1, rc);
 }
 
 
 static Token
 eval_fill_B(Value_P B)
 {
-UCS_string ucs("aplplot eval_fill_B() called");
-Value_P Z(new Value(ucs, LOC));
-   Z->check_value(LOC);
-   return Token(TOK_APL_VALUE1, Z);
+  int64_t rc = 0;
+  return Token(TOK_APL_VALUE1, rc);
 }
 
 static Token
 eval_fill_AB(Value_P A, Value_P B)
 {
-UCS_string ucs("aplplot eval_fill_B() called");
-Value_P Z(new Value(ucs, LOC));
-   Z->check_value(LOC);
-   return Token(TOK_APL_VALUE1, Z);
+  int64_t rc = 0;
+  return Token(TOK_APL_VALUE1, rc);
 }
 
 static Token
 eval_ident_Bx(Value_P B, Axis x)
 {
-UCS_string ucs("aplplot eval_ident_Bx() called");
-Value_P Z(new Value(ucs, LOC));
-   Z->check_value(LOC);
-   return Token(TOK_APL_VALUE1, Z);
+  int64_t rc = 0;
+  return Token(TOK_APL_VALUE1, rc);
 }
 
 
