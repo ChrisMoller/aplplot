@@ -965,37 +965,32 @@ eval_AB(Value_P A, Value_P B)
 static Token
 eval_XB(Value_P X, Value_P B)
 {
-  int64_t rc = 0;
-  return Token(TOK_APL_VALUE1, rc);
+  return Token(TOK_APL_VALUE1, Str0_0 (LOC));
 }
 
 static Token
 eval_AXB(Value_P A, Value_P X, Value_P B)
 {
-  int64_t rc = 0;
-  return Token(TOK_APL_VALUE1, rc);
+  return Token(TOK_APL_VALUE1, Str0_0 (LOC));
 }
 
 
 static Token
 eval_fill_B(Value_P B)
 {
-  int64_t rc = 0;
-  return Token(TOK_APL_VALUE1, rc);
+  return Token(TOK_APL_VALUE1, Str0_0 (LOC));
 }
 
 static Token
 eval_fill_AB(Value_P A, Value_P B)
 {
-  int64_t rc = 0;
-  return Token(TOK_APL_VALUE1, rc);
+  return Token(TOK_APL_VALUE1, Str0_0 (LOC));
 }
 
 static Token
 eval_ident_Bx(Value_P B, Axis x)
 {
-  int64_t rc = 0;
-  return Token(TOK_APL_VALUE1, rc);
+  return Token(TOK_APL_VALUE1, Str0_0 (LOC));
 }
 
 
