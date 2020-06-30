@@ -9,7 +9,7 @@ For build and installation instructions, see the INSTALL file.
 To use the aplplot package, you need associate the library with an APL function 
 name:
 
-	 'libaplplot.so' quad-FX  'plot'
+	 'libaplplot.so' ⎕FX  'plot'
 
 after which you can use it just like any other function:
 
@@ -25,6 +25,16 @@ after which you can use it just like any other function:
 		3. A vector of complex values, yielding a 3-space plot.
 
 		Other capabilities will be added as time goes on.
+
+	For example:
+
+		'libaplplot.so' ⎕FX 'plot'
+		c←2○(⍳128)÷6
+		s←1○2×(⍳128)÷6
+		plot c+s×0J1
+
+	will get you, in a separate window, a fancy 3-space plot image of a 
+	complex-space Lissajous pattern.
 
 
 Options may be passed to the functions using a left argument:
@@ -126,12 +136,21 @@ Options may be passed to the functions using a left argument:
 			   
 		can be used to store options without creating a plot.
 
+		As an example:
+
+			'bgwhite;tlabel "Complex vector"' plot c+s×0J1
+
+		will get you the same plot with a white background instead of 
+		black and a top label of "Complex vector".
+			
+
 		Other options will be added as time goes on.
 
 
-	The plot function spawns and detaches processes to display the plots;
-	as many plots as you like can be displayed simultaneously.
+	When directed to the screen, the plot function spawns and detaches 
+	processes to display the plots; as many plots as you like can be 
+	displayed simultaneously.
 
 
-See http://github.com/ChrisMoller/aplplot/wiki for some examples.
+See http://github.com/ChrisMoller/aplplot/wiki for more examples.
 
