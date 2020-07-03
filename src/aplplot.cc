@@ -29,7 +29,11 @@
 #include <signal.h>
 #include <values.h>
 #include <fcntl.h>
+#include <dlfcn.h>
 #include <plplot/plplot.h>
+
+#include "aplplot.hh"
+#include "aplplot_menu.h"
 
 using namespace std;
 namespace qi = boost::spirit::qi;
@@ -44,7 +48,6 @@ namespace ascii = boost::spirit::ascii;
 #undef PACKAGE_VERSION
 #undef VERSION
 
-#include "aplplot.hh"
 
 #define DEF_XCAIRO	"xcairo"
 #define DEF_PNGCAIRO	"pngcairo"
@@ -87,6 +90,7 @@ static int	xcol		= -1;
 static int	draw		= APL_DRAW_LINES;
 static string 	filename;
 static bool     embed		= false;
+static bool     menu		= false;
 static string 	target (DEF_XCAIRO);
 static unsigned char bgred = 0, bggreen = 0, bgblue = 0;
 static double	xorigin		= 0.0;
@@ -95,6 +99,11 @@ static int      plot_pipe_fd = -1;
 
 string keyword;
 vector<string> args;
+
+void *menu_handle = NULL;
+void (*aplplot_menu)(void *fcn) = NULL;
+char *(*aplplot_menu_get_string)(int which) = NULL;
+double (*aplplot_menu_get_double)(int which) = NULL;
 
 typedef boost::unordered_map<std::string, int> si_map;
 si_map  kwd_map;
@@ -123,6 +132,13 @@ static void reset_options (int arg) {
   xorigin	= 0.0;
   xspan		= -1.0;
   embed		= false;
+  menu		= false;
+}
+
+void
+talk_back ()
+{
+  cout << "heard something\n";
 }
 
 static void set_width (int arg) {
@@ -160,6 +176,24 @@ static void set_killem (int arg) { killem = true; }
 static void set_embed (int arg) {
   embed = (args.size () >= 1 && 0 == args[0].compare ("off")) ? false : true;
   if (embed) target = DEF_PNGCAIRO;
+}
+
+
+static void set_menu (int arg) {
+  if (aplplot_menu) {
+    (*aplplot_menu) ((void *)talk_back);
+#if 0
+    if (aplplot_menu_get_string) {
+      char *x_label = (*aplplot_menu_get_string)(VALUE_X_LABEL);
+      cout << "x_label = " << x_label << endl;
+    }
+    if (aplplot_menu_get_double) {
+      double width = (*aplplot_menu_get_double)(VALUE_WIDTH);
+      cout << "width = " << width << endl;
+    }
+#endif
+  }
+  menu = (args.size () >= 1 && 0 == args[0].compare ("off")) ? false : true;
 }
 
 static void set_xlog (int arg) {
@@ -325,6 +359,7 @@ kwd_s kwds[] = {
   {"both",		set_draw,	APL_DRAW_BOTH},
   {"file",		set_file,	0},
   {"embed",		set_embed,	0},
+  {"menu",		set_menu,	0},
   {"dest",		set_dest,	0},
   {"reset",		reset_options,	0},
   {"xdomain",		set_domain,	0},
@@ -343,20 +378,6 @@ public:
   PLFLT *xvec;
   PLFLT *yvec;
 };
-
-void *
-get_function_mux(const char * function_name)
-{
-   if (!strcmp(function_name, "get_signature"))   return (void *)&get_signature;
-   if (!strcmp(function_name, "eval_B"))          return (void *)&eval_B;
-   if (!strcmp(function_name, "eval_AB"))         return (void *)&eval_AB;
-   if (!strcmp(function_name, "eval_XB"))         return (void *)&eval_XB;
-   if (!strcmp(function_name, "eval_AXB"))        return (void *)&eval_AXB;
-   if (!strcmp(function_name, "eval_fill_B"))     return (void *)&eval_fill_B;
-   if (!strcmp(function_name, "eval_fill_AB"))    return (void *)&eval_fill_AB;
-   if (!strcmp(function_name, "eval_ident_Bx"))   return (void *)&eval_ident_Bx;
-   return 0;
-}
 
 static void
 render_z (PLINT count,
@@ -993,5 +1014,30 @@ eval_ident_Bx(Value_P B, Axis x)
   return Token(TOK_APL_VALUE1, Str0_0 (LOC));
 }
 
+
+void *
+get_function_mux(const char * function_name)
+{
+
+  if (!menu_handle) {
+    menu_handle = dlopen ("/usr/local/lib/apl/libaplplot_menu.so", RTLD_NOW);
+    aplplot_menu = (void (*)(void *))dlsym (menu_handle, "aplplot_menu");
+
+    aplplot_menu_get_string =
+      (char * (*)(int which))dlsym (menu_handle, "aplplot_menu_get_string");
+
+    aplplot_menu_get_double =
+      (double (*)(int which))dlsym (menu_handle, "aplplot_menu_get_double");
+  }
+  if (!strcmp(function_name, "get_signature"))   return (void *)&get_signature;
+  if (!strcmp(function_name, "eval_B"))          return (void *)&eval_B;
+  if (!strcmp(function_name, "eval_AB"))         return (void *)&eval_AB;
+  if (!strcmp(function_name, "eval_XB"))         return (void *)&eval_XB;
+  if (!strcmp(function_name, "eval_AXB"))        return (void *)&eval_AXB;
+  if (!strcmp(function_name, "eval_fill_B"))     return (void *)&eval_fill_B;
+  if (!strcmp(function_name, "eval_fill_AB"))    return (void *)&eval_fill_AB;
+  if (!strcmp(function_name, "eval_ident_Bx"))   return (void *)&eval_ident_Bx;
+  return 0;
+}
 
 

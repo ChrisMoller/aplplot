@@ -14,6 +14,16 @@ libdir=$libdir/apl
 
 APL_SOURCES=`apl --show_src_dir`
 
+
+PKG_CHECK_MODULES([CAIRO], [cairo >= 1.13])
+AC_SUBST(CAIRO_CFLAGS)
+AC_SUBST(CAIRO_LIBS)
+
+PKG_CHECK_MODULES([GTK],   [gtk+-3.0 >= 3.18.8])
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
+
+
 AC_CHECK_FILE($APL_SOURCES, [foundit=yes], [foundit=no])
 if test x$foundit = xno; then
 AC_ARG_WITH([apl-source-dir],
@@ -23,6 +33,15 @@ AC_ARG_WITH([apl-source-dir],
 fi
 
 AC_SUBST(APL_SOURCES)
+
+PKG_CHECK_MODULES([CAIRO], [cairo >= 1.13])
+AC_SUBST(CAIRO_CFLAGS)
+AC_SUBST(CAIRO_LIBS)
+
+PKG_CHECK_MODULES([GTK],   [gtk+-3.0 >= 3.18.8])
+AC_SUBST(GTK_CFLAGS)
+AC_SUBST(GTK_LIBS)
+
 
 # AC_CHECK_HEADERS tries to compile the header but uses C instead of C++
 # maybe an autoconf expert knows how to make it work right
