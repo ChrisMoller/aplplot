@@ -163,6 +163,7 @@ aplplot_set_value (value_u val)
     break;
   case VALUE_EMBED:
     embed = val.val.b;
+    if (embed) target = DEF_PNGCAIRO;
     break;
   case VALUE_COLOUR_RED:
     bgred   = (unsigned char)val.val.i;
