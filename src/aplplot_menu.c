@@ -3,90 +3,98 @@
 
 #include "aplplot_menu.h"
 
+aplplot_set_value_t aplplot_set_value = NULL;
+
 #define INITIAL_WIDTH  640
 #define INITIAL_HEIGHT 480
 
 static gint window_width  = INITIAL_WIDTH;
 static gint window_height = INITIAL_HEIGHT;
 static GtkWidget *window;
+static GtkApplication *app;
 
 static GtkWidget *cart;
 static GtkWidget *polar;
 static GtkWidget *deg;
 static GtkWidget *rad;
 static GtkWidget *pirad;
-static GtkWidget *screen;
-static GtkWidget *png;
-static GtkWidget *pdf;
-static GtkWidget *ps;
-static GtkWidget *eps;
-static GtkWidget *svg;
 static GtkWidget *xlabel;
 static GtkWidget *ylabel;
 static GtkWidget *tlabel;
 static GtkWidget *file_name;
 static GtkWidget *colour;
-static GtkWidget *width = NULL;
-static GtkWidget *height = NULL;
+static GtkWidget *width;
+static GtkWidget *height;
+static GtkWidget *x_col;
+static GtkWidget *file_name;
+static GtkWidget *file_button;
+
+static char *filename = NULL;
 
 enum {MODE_CART, MODE_POLAR};
 
-double
-aplplot_menu_get_double (int which)
+static void
+file_clicked_cb (GtkButton *button,
+		 gpointer   user_data)
 {
-  double rv = NAN;
-  switch(which) {
-  case VALUE_WIDTH:
-    fprintf (stderr, "width = %p\n", width);
-    rv = gtk_spin_button_get_value (GTK_SPIN_BUTTON (width));
-    break;
-  case VALUE_HEIGHT:
-    rv = gtk_spin_button_get_value (GTK_SPIN_BUTTON (height));
-    break;
-  case VALUE_X_MIN:
-    break;
-  case VALUE_X_MAX:
-    break;
+  GtkWidget *dialog =
+    gtk_file_chooser_dialog_new ("File name",
+				 GTK_WINDOW (window),
+				 GTK_FILE_CHOOSER_ACTION_SAVE,
+				 "Cancel",
+				 GTK_RESPONSE_CANCEL,
+				 "Select",
+				 GTK_RESPONSE_ACCEPT,
+				 NULL);
+  gint res = gtk_dialog_run (GTK_DIALOG (dialog));
+  if (res == GTK_RESPONSE_ACCEPT) {
+    GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
+    if (filename) g_free (filename);
+    filename = gtk_file_chooser_get_filename (chooser);
+    gtk_label_set_text (GTK_LABEL (file_name), filename);
+    g_free (filename);
   }
-  return rv;
-}
 
-char *
-aplplot_menu_get_string (int which)
-{
-  gchar *rv = NULL;
-  switch(which) {
-  case VALUE_X_LABEL:
-    rv = (gchar *)gtk_entry_get_text (GTK_ENTRY (xlabel));
-    break;
-  case VALUE_Y_LABEL:
-    rv =  (gchar *)gtk_entry_get_text (GTK_ENTRY (ylabel));
-    break;
-  case VALUE_T_LABEL:
-    rv =  (gchar *)gtk_entry_get_text (GTK_ENTRY (tlabel));
-    break;
-  case VALUE_FILE_NAME:
-    rv =  (gchar *)gtk_entry_get_text (GTK_ENTRY (file_name));
-    break;
-  case VALUE_COLOUR:
-    {
-      GdkRGBA colour_val;
-      static gchar *colour_gchar = NULL;
-      gtk_color_chooser_get_rgba (GTK_COLOR_CHOOSER (colour),
-				  &colour_val);
-      if (colour_gchar) g_free (colour_gchar);
-      rv = colour_gchar = gdk_rgba_to_string (&colour_val);
-    }
-    break;
-  }
-  return rv;
+  gtk_widget_destroy (dialog);
 }
 
 static void
 hitit_clicked_cb (GtkButton *button,
 		  gpointer   user_data)
 {
-  g_print ("hit it\n");
+  value_u val;
+  val.type = VALUE_WIDTH;
+  val.val.i = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (width));
+  aplplot_set_value (val);
+  
+  val.type = VALUE_HEIGHT;
+  val.val.i = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (height));
+  aplplot_set_value (val);
+  
+  val.type = VALUE_X_COL;
+  val.val.b = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (x_col));
+  aplplot_set_value (val);
+  
+  val.type = VALUE_DEST;
+  val.val.i = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (x_col));
+  aplplot_set_value (val);
+  
+  value_u vals = { VALUE_X_LABEL, .val.s = "mmmmmmmmmmmm"};
+  aplplot_set_value (vals);
+  value_u valb = { VALUE_EMBED, .val.b = 1};
+  aplplot_set_value (valb);
+  value_u vald = { VALUE_DEST, .val.d = DEST_SVG};
+  aplplot_set_value (vald);
+  value_u valc = { VALUE_ANGLES, .val.c = COORDS_RADIANS};
+  aplplot_set_value (valc);
+#if 0
+  exit (0);
+  gtk_main_quit ();
+  g_application_release (G_APPLICATION (app));
+  gtk_application_remove_window (GTK_APPLICATION (app),
+				 GTK_WINDOW (window));
+  g_application_quit (G_APPLICATION (app));
+#endif
 }
 
 static void
@@ -95,12 +103,8 @@ embed_toggled_cb (GtkButton *button,
 {
   gboolean active =
     gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (button));
-  gtk_widget_set_sensitive (screen,	!active);
-  gtk_widget_set_sensitive (png,	!active);
-  gtk_widget_set_sensitive (pdf,	!active);
-  gtk_widget_set_sensitive (ps,		!active);
-  gtk_widget_set_sensitive (eps,	!active);
-  gtk_widget_set_sensitive (svg,	!active);
+  gtk_widget_set_sensitive (file_name,	 !active);
+  gtk_widget_set_sensitive (file_button, !active);
 }
 
 static void
@@ -120,6 +124,8 @@ activate (GtkApplication* app,
           gpointer        user_data)
 {
   window = gtk_application_window_new (app);
+  g_signal_connect (G_OBJECT (window), "destroy",
+                    G_CALLBACK (hitit_clicked_cb), NULL);
   gtk_window_set_title (GTK_WINDOW (window), "Aplplot");
   GtkWidget *frame = gtk_frame_new (NULL);
   gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_IN);
@@ -220,58 +226,15 @@ activate (GtkApplication* app,
       gtk_box_pack_start (GTK_BOX (hbox), embed, FALSE, FALSE, 4);
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (embed), FALSE);
       g_signal_connect (embed, "toggled", G_CALLBACK (embed_toggled_cb), NULL);
-      
-      colour = gtk_color_button_new ();
-      gtk_box_pack_end (GTK_BOX (hbox), colour, FALSE, FALSE, 4);
-
-      GtkWidget *colour_label = gtk_label_new ("Background colour");
-      gtk_box_pack_end (GTK_BOX (hbox), colour_label, FALSE, FALSE, 4);
-    }
-
-    {
-      GtkWidget *hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 4);
-      gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 4);
-
-      screen =
-	gtk_radio_button_new_with_label (NULL, "Screen");
-      png =
-	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (screen),
-						     "PNG");
-      pdf =
-	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (screen),
-						     "Pdf");
-      ps =
-	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (screen),
-						     "PS");
-      eps =
-	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (screen),
-						     "EPS");
-      svg =
-	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (screen),
-						   "SVG");
-      gtk_box_pack_start (GTK_BOX (hbox), screen, FALSE, FALSE, 4);
-      gtk_box_pack_start (GTK_BOX (hbox), png, FALSE, FALSE, 4);
-      gtk_box_pack_start (GTK_BOX (hbox), pdf, FALSE, FALSE, 4);
-      gtk_box_pack_start (GTK_BOX (hbox), ps, FALSE, FALSE, 4);
-      gtk_box_pack_start (GTK_BOX (hbox), eps, FALSE, FALSE, 4);
-      gtk_box_pack_start (GTK_BOX (hbox), svg, FALSE, FALSE, 4);
-    }
-
-    {
-      GtkWidget *hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 4);
-      gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 4);
-
-      GtkWidget *file_label = gtk_label_new ("File name");
-      gtk_box_pack_start (GTK_BOX (hbox), file_label, FALSE, FALSE, 4);
-
-      GtkWidget *file_name;
-      file_name = gtk_entry_new ();
-      gtk_entry_set_placeholder_text (GTK_ENTRY (file_name),
-				      "Output file name");
-      gtk_box_pack_start (GTK_BOX (hbox), file_name, TRUE, TRUE, 4);
-    } 
     
-
+      file_button = gtk_button_new_with_label ("Set file name");
+      g_signal_connect (file_button, "clicked",
+			G_CALLBACK (file_clicked_cb), NULL);
+      gtk_box_pack_start (GTK_BOX (hbox), file_button, FALSE, FALSE, 4);
+      
+      file_name = gtk_label_new ("(unset)");
+      gtk_box_pack_start (GTK_BOX (hbox), file_name, TRUE, TRUE, 4);
+    }
   }
 
   {	// third hbox
@@ -297,6 +260,12 @@ activate (GtkApplication* app,
       gtk_grid_attach (GTK_GRID (vbox_dims), height, 1, 1, 1, 1);
       gtk_spin_button_set_value (GTK_SPIN_BUTTON (height),
 				 (gdouble)INITIAL_HEIGHT);
+
+      GtkWidget *colour_label = gtk_label_new ("Background colour");
+      gtk_grid_attach (GTK_GRID (vbox_dims), colour_label, 0, 2, 1, 1);
+      
+      colour = gtk_color_button_new ();
+      gtk_grid_attach (GTK_GRID (vbox_dims), colour, 1, 2, 1, 1);
     }
     {
       GtkWidget *range_dims = gtk_grid_new ();
@@ -328,8 +297,7 @@ activate (GtkApplication* app,
 
       GtkWidget *x_col_lbl = gtk_label_new ("X Column");
       gtk_grid_attach (GTK_GRID (range_dims), x_col_lbl, 0, 2, 1, 1);
-      GtkWidget *x_col =
-	gtk_spin_button_new_with_range (00, 1000.0, 1.0);
+      x_col = gtk_spin_button_new_with_range (00, 1000.0, 1.0);
       gtk_grid_attach (GTK_GRID (range_dims), x_col, 1, 2, 1, 1);
       gtk_spin_button_set_value (GTK_SPIN_BUTTON (x_col), 0.0);
     }
@@ -359,7 +327,7 @@ activate (GtkApplication* app,
   }
 
   GtkWidget *hitit = gtk_button_new_with_label ("Go");
-  g_signal_connect (cart, "clicked", G_CALLBACK (hitit_clicked_cb), NULL);
+  g_signal_connect (hitit, "clicked", G_CALLBACK (hitit_clicked_cb), NULL);
   gtk_box_pack_start (GTK_BOX (outer_vbox), hitit, FALSE, FALSE, 4);
   
   gtk_widget_show_all (window);
@@ -412,32 +380,10 @@ command_line_cb (GApplication            *application,
   return 1;
 }
 
-static gchar **apl_argv      = NULL;
-static int     apl_argv_next = 0;
-static int     apl_argv_max  = 0;
-#define APL_ARGV_INCR   16
-
-static void
-append_argv (gchar *av)
-{
-  if (apl_argv_max <= apl_argv_next) {
-    apl_argv_max += APL_ARGV_INCR;
-    apl_argv = g_realloc (apl_argv, apl_argv_max * sizeof(gchar *));
-  }
-  apl_argv[apl_argv_next++] = av;
-}
-
-void (*talkback)() = NULL;
-
 void
 aplplot_menu (void *fcn)
 {
-  GtkApplication *app;
-  talkback = (void (*)())fcn;
-  (*talkback)();
-
-  append_argv ("aplplot");
-  append_argv (NULL);
+  aplplot_set_value = (aplplot_set_value_t)fcn;
 
   app = gtk_application_new ("org.gtk.example",
                              G_APPLICATION_HANDLES_COMMAND_LINE);
@@ -445,7 +391,7 @@ aplplot_menu (void *fcn)
                     G_CALLBACK (command_line_cb), NULL);
   g_signal_connect (app, "activate",
                     G_CALLBACK (activate), NULL);
-  g_application_run (G_APPLICATION (app), apl_argv_next, apl_argv);
-  //  g_application_run (G_APPLICATION (app), argc, argv);
+  g_application_run (G_APPLICATION (app), 0, NULL);
+
   g_object_unref (app);
 }

@@ -101,9 +101,7 @@ string keyword;
 vector<string> args;
 
 void *menu_handle = NULL;
-void (*aplplot_menu)(void *fcn) = NULL;
-char *(*aplplot_menu_get_string)(int which) = NULL;
-double (*aplplot_menu_get_double)(int which) = NULL;
+aplplot_menu_t aplplot_menu = NULL;
 
 typedef boost::unordered_map<std::string, int> si_map;
 si_map  kwd_map;
@@ -136,10 +134,71 @@ static void reset_options (int arg) {
 }
 
 void
-talk_back ()
+aplplot_set_value (value_u val)
 {
-  cout << "heard something\n";
+  switch(val.type) {
+  case VALUE_WIDTH:
+    plot_width =  val.val.i;
+    cout << "VALUE_WIDTH = " << val.val.i << endl;
+    break;
+  case VALUE_HEIGHT:
+    plot_height =  val.val.i;
+    cout << "VALUE_HEIGHT = " << val.val.i << endl;
+    break;
+  case VALUE_X_COL:
+    xcol =  val.val.b;
+    cout << "VALUE_X_COL = " << val.val.b << endl;
+    break;
+  case VALUE_DEST:
+    //    xcol =  << val.val.i;
+    cout << "VALUE_DEST = " << val.val.d << endl;
+    break;
+  case VALUE_EMBED:
+    embed = val.val.b;
+    cout << "VALUE_EMBED = " << val.val.b << endl;
+    break;
+
+
+  case VALUE_X_LABEL:
+    cout << "VALUE_X_LABEL = " << val.val.s << endl;
+    break;
+  case VALUE_Y_LABEL:
+    cout << "VALUE_Y_LABEL = " << val.val.s << endl;
+    break;
+  case VALUE_T_LABEL:
+    cout << "VALUE_T_LABEL = " << val.val.s << endl;
+    break;
+  case VALUE_FILE_NAME:
+    cout << "VALUE_FILE_NAME = " << val.val.s << endl;
+    break;
+  case VALUE_X_LOG:
+    break;
+  case VALUE_Y_LOG:
+    break;
+  case VALUE_LINES:
+    break;
+  case VALUE_POINTS:
+    break;
+  case VALUE_POLAR:
+    break;
+  case VALUE_ANGLES:
+    cout << "VALUE_ANGLES = " << val.val.c << endl;
+    break;
+  case VALUE_X_MIN:
+    break;
+  case VALUE_X_MAX:
+    break;
+  case VALUE_COLOUR:
+    cout << "VALUE_CcOLOUR = " << val.val.s << endl;
+    break;
+  }
 }
+
+//void
+//talk_back ()
+//{
+//  cout << "heard something\n";
+//}
 
 static void set_width (int arg) {
   if (args.size () >= 1) istringstream (args[0]) >> plot_width;
@@ -181,7 +240,7 @@ static void set_embed (int arg) {
 
 static void set_menu (int arg) {
   if (aplplot_menu) {
-    (*aplplot_menu) ((void *)talk_back);
+    (*aplplot_menu) ((void *)aplplot_set_value);
 #if 0
     if (aplplot_menu_get_string) {
       char *x_label = (*aplplot_menu_get_string)(VALUE_X_LABEL);
@@ -1021,13 +1080,7 @@ get_function_mux(const char * function_name)
 
   if (!menu_handle) {
     menu_handle = dlopen ("/usr/local/lib/apl/libaplplot_menu.so", RTLD_NOW);
-    aplplot_menu = (void (*)(void *))dlsym (menu_handle, "aplplot_menu");
-
-    aplplot_menu_get_string =
-      (char * (*)(int which))dlsym (menu_handle, "aplplot_menu_get_string");
-
-    aplplot_menu_get_double =
-      (double (*)(int which))dlsym (menu_handle, "aplplot_menu_get_double");
+    aplplot_menu = (aplplot_menu_t)dlsym (menu_handle, "aplplot_menu");
   }
   if (!strcmp(function_name, "get_signature"))   return (void *)&get_signature;
   if (!strcmp(function_name, "eval_B"))          return (void *)&eval_B;

@@ -1,6 +1,8 @@
 #ifndef APLPLOT_MENU_H
 #define APLPLOT_MENU_H
 
+typedef void (*aplplot_menu_t) (void *fcn);  
+
 typedef enum {
 	      DEST_SCREEN,
 	      DEST_PNG,
@@ -17,11 +19,11 @@ typedef enum {
 } coords_e;
 
 enum {
+      VALUE_WIDTH,		// int
+      VALUE_HEIGHT,		// int
       VALUE_X_LABEL,		// string
       VALUE_Y_LABEL,		// string
       VALUE_T_LABEL,		// string
-      VALUE_WIDTH,		// double
-      VALUE_HEIGHT,		// double
       VALUE_X_COL,		// int
       VALUE_FILE_NAME,		// string
       VALUE_EMBED,		// boolean
@@ -36,5 +38,19 @@ enum {
       VALUE_X_MAX,		// double
       VALUE_COLOUR		// string
 };
+
+typedef struct {
+  int type;
+  union {
+    char    *s;
+    double   f;
+    int      i;
+    int      b;
+    dest_e   d;
+    coords_e c;
+  } val;
+} value_u;
+
+typedef void (*aplplot_set_value_t) (value_u val);  
 
 #endif // APLPLOT_MENU_H
