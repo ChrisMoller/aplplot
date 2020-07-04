@@ -63,19 +63,6 @@ namespace ascii = boost::spirit::ascii;
 #define DEF_EPS		"eps"
 #define DEF_SVG		"svg"
 
-#define DEFAULT_PLOT_WIDTH	512
-#define DEFAULT_PLOT_HEIGHT	480
-
-enum {APL_MODE_SET, APL_MODE_XY, APL_MODE_POLAR };
-enum {APL_ANGLE_SET, APL_ANGLE_DEGREES,
-      APL_ANGLE_RADIANS, APL_ANGLE_PI_RADIANS };
-
-#define APL_DRAW_SET		-1
-#define APL_DRAW_NOTHING	0
-#define APL_DRAW_LINES		(1 << 0)
-#define APL_DRAW_POINTS		(2 << 1)
-#define APL_DRAW_BOTH		(APL_DRAW_LINES | APL_DRAW_POINTS)
-
 static int 	plot_width	= DEFAULT_PLOT_WIDTH;
 static int	plot_height	= DEFAULT_PLOT_HEIGHT;
 static string	xlabel;
@@ -139,50 +126,44 @@ aplplot_set_value (value_u val)
   switch(val.type) {
   case VALUE_WIDTH:
     plot_width =  val.val.i;
-    cout << "VALUE_WIDTH = " << val.val.i << endl;
     break;
   case VALUE_HEIGHT:
     plot_height =  val.val.i;
-    cout << "VALUE_HEIGHT = " << val.val.i << endl;
+    break;
+  case VALUE_X_LABEL:
+    xlabel =  val.val.s;
+    break;
+  case VALUE_Y_LABEL:
+    ylabel =  val.val.s;
+    break;
+  case VALUE_T_LABEL:
+    tlabel =  val.val.s;
+    break;
+  case VALUE_X_LOG:
+    xlog = val.val.b;
+    break;
+  case VALUE_Y_LOG:
+    ylog = val.val.b;
+    break;
+  case VALUE_COORDS:
+    mode = val.val.i;
+    break;
+  case VALUE_ANGLES:
+    angle_units =  val.val.i;
     break;
   case VALUE_X_COL:
     xcol =  val.val.b;
-    cout << "VALUE_X_COL = " << val.val.b << endl;
     break;
-  case VALUE_DEST:
-    //    xcol =  << val.val.i;
-    cout << "VALUE_DEST = " << val.val.d << endl;
+  case VALUE_DRAW:
+    draw =  val.val.i;
     break;
   case VALUE_EMBED:
     embed = val.val.b;
-    cout << "VALUE_EMBED = " << val.val.b << endl;
     break;
 
 
-  case VALUE_X_LABEL:
-    cout << "VALUE_X_LABEL = " << val.val.s << endl;
-    break;
-  case VALUE_Y_LABEL:
-    cout << "VALUE_Y_LABEL = " << val.val.s << endl;
-    break;
-  case VALUE_T_LABEL:
-    cout << "VALUE_T_LABEL = " << val.val.s << endl;
-    break;
   case VALUE_FILE_NAME:
     cout << "VALUE_FILE_NAME = " << val.val.s << endl;
-    break;
-  case VALUE_X_LOG:
-    break;
-  case VALUE_Y_LOG:
-    break;
-  case VALUE_LINES:
-    break;
-  case VALUE_POINTS:
-    break;
-  case VALUE_POLAR:
-    break;
-  case VALUE_ANGLES:
-    cout << "VALUE_ANGLES = " << val.val.c << endl;
     break;
   case VALUE_X_MIN:
     break;

@@ -5,11 +5,8 @@
 
 aplplot_set_value_t aplplot_set_value = NULL;
 
-#define INITIAL_WIDTH  640
-#define INITIAL_HEIGHT 480
-
-static gint window_width  = INITIAL_WIDTH;
-static gint window_height = INITIAL_HEIGHT;
+static gint window_width  = DEFAULT_PLOT_WIDTH;
+static gint window_height = DEFAULT_PLOT_HEIGHT;
 static GtkWidget *window;
 static GtkApplication *app;
 
@@ -28,10 +25,14 @@ static GtkWidget *height;
 static GtkWidget *x_col;
 static GtkWidget *file_name;
 static GtkWidget *file_button;
+static GtkWidget *xlog;
+static GtkWidget *ylog;
+static GtkWidget *lines;
+static GtkWidget *points;
 
+static gboolean fn_valid = FALSE;
 static char *filename = NULL;
-
-enum {MODE_CART, MODE_POLAR};
+static int angle_mode = APL_ANGLE_RADIANS;
 
 static void
 file_clicked_cb (GtkButton *button,
@@ -51,6 +52,7 @@ file_clicked_cb (GtkButton *button,
     GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
     if (filename) g_free (filename);
     filename = gtk_file_chooser_get_filename (chooser);
+    if (filename && *filename) fn_valid = TRUE;
     gtk_label_set_text (GTK_LABEL (file_name), filename);
     g_free (filename);
   }
@@ -62,7 +64,12 @@ static void
 hitit_clicked_cb (GtkButton *button,
 		  gpointer   user_data)
 {
+  static char *xlbl = NULL;
+  static char *ylbl = NULL;
+  static char *tlbl = NULL;
+  static char *fn = NULL;
   value_u val;
+
   val.type = VALUE_WIDTH;
   val.val.i = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (width));
   aplplot_set_value (val);
@@ -70,23 +77,67 @@ hitit_clicked_cb (GtkButton *button,
   val.type = VALUE_HEIGHT;
   val.val.i = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (height));
   aplplot_set_value (val);
+
+  if (xlbl) g_free (xlbl);
+  val.type = VALUE_X_LABEL;
+  val.val.s = xlbl = g_strdup (gtk_entry_get_text (GTK_ENTRY (xlabel)));
+  aplplot_set_value (val);
+
+  if (ylbl) g_free (ylbl);
+  val.type = VALUE_Y_LABEL;
+  val.val.s = ylbl = g_strdup (gtk_entry_get_text (GTK_ENTRY (ylabel)));
+  aplplot_set_value (val);
+
+  if (tlbl) g_free (tlbl);
+  val.type = VALUE_T_LABEL;
+  val.val.s = tlbl = g_strdup (gtk_entry_get_text (GTK_ENTRY (tlabel)));
+  aplplot_set_value (val);
+  
+  val.type = VALUE_X_LOG;
+  val.val.b =  gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (xlog));
+  aplplot_set_value (val);
+  
+  val.type = VALUE_Y_LOG;
+  val.val.b =  gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (ylog));
+  aplplot_set_value (val);
+  
+  val.type = VALUE_COORDS;
+  int pp =  gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (polar));
+  val.val.i =  pp ? APL_MODE_POLAR : APL_MODE_XY;
+  aplplot_set_value (val);
+  
+  val.type = VALUE_ANGLES;
+  val.val.i = angle_mode;
+  aplplot_set_value (val);
   
   val.type = VALUE_X_COL;
-  val.val.b = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (x_col));
+  val.val.i = gtk_spin_button_get_value_as_int (GTK_SPIN_BUTTON (x_col));
   aplplot_set_value (val);
   
-  val.type = VALUE_DEST;
-  val.val.i = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (x_col));
+  val.type = VALUE_DRAW;
+  gboolean la = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (lines));
+  gboolean pa = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (points));
+  gint am = 0;
+  am |= la ? APL_DRAW_LINES : 0;
+  am |= pa ? APL_DRAW_POINTS : 0;
+  val.val.i =  am;
   aplplot_set_value (val);
+
+  if (fn_valid) {
+    if (fn) g_free (fn);
+    val.type = VALUE_FILE_NAME;
+    val.val.s = fn = g_strdup (gtk_label_get_text (GTK_LABEL (file_name)));
+    aplplot_set_value (val);
+  }
   
-  value_u vals = { VALUE_X_LABEL, .val.s = "mmmmmmmmmmmm"};
-  aplplot_set_value (vals);
+#if 0
   value_u valb = { VALUE_EMBED, .val.b = 1};
   aplplot_set_value (valb);
   value_u vald = { VALUE_DEST, .val.d = DEST_SVG};
   aplplot_set_value (vald);
   value_u valc = { VALUE_ANGLES, .val.c = COORDS_RADIANS};
   aplplot_set_value (valc);
+#endif
 #if 0
   exit (0);
   gtk_main_quit ();
@@ -111,7 +162,13 @@ static void
 angle_clicked_cb (GtkButton *button,
 		  gpointer   user_data)
 {
-  int mode = GPOINTER_TO_INT (user_data);
+  angle_mode = GPOINTER_TO_INT (user_data);
+}
+
+static void
+coords_clicked_cb (GtkButton *button,
+		  gpointer   user_data)
+{
   gboolean active =
     gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (polar));
   gtk_widget_set_sensitive (deg,   active);
@@ -142,24 +199,34 @@ activate (GtkApplication* app,
       GtkWidget *vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 4);
       gtk_box_pack_start (GTK_BOX (hbox), vbox, FALSE, FALSE, 4);
 
-      GtkWidget *linear =
-	gtk_radio_button_new_with_label (NULL, "Linear");
+      GtkWidget *xlinear =
+	gtk_radio_button_new_with_label (NULL, "X Linear");
 
-      GtkWidget *log =
-	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (linear),
-						     "Logarithmic");
+      xlog =
+	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (xlinear),
+						     "X Logarithmic");
 
-      gtk_box_pack_start (GTK_BOX (vbox), linear, FALSE, FALSE, 4);
-      gtk_box_pack_start (GTK_BOX (vbox), log, FALSE, FALSE, 4);
+      GtkWidget *ylinear =
+	gtk_radio_button_new_with_label (NULL, "Y Linear");
+
+      ylog =
+	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (ylinear),
+						     "Y Logarithmic");
+
+      gtk_box_pack_start (GTK_BOX (vbox), xlinear, FALSE, FALSE, 4);
+      gtk_box_pack_start (GTK_BOX (vbox), xlog, FALSE, FALSE, 4);
+      gtk_box_pack_start (GTK_BOX (vbox), ylinear, FALSE, FALSE, 4);
+      gtk_box_pack_start (GTK_BOX (vbox), ylog, FALSE, FALSE, 4);
     }
 
     {
       GtkWidget *vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 4);
       gtk_box_pack_start (GTK_BOX (hbox), vbox, FALSE, FALSE, 4);
 
-      GtkWidget *lines  = gtk_check_button_new_with_label ("Lines");
-      GtkWidget *points = gtk_check_button_new_with_label ("Points");
+      lines  = gtk_check_button_new_with_label ("Lines");
+      points = gtk_check_button_new_with_label ("Points");
 
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (lines), TRUE);
       gtk_box_pack_start (GTK_BOX (vbox), lines, FALSE, FALSE, 4);
       gtk_box_pack_start (GTK_BOX (vbox), points, FALSE, FALSE, 4);
     }
@@ -177,12 +244,8 @@ activate (GtkApplication* app,
 						     "Polar");
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (polar), FALSE);
 
-      g_signal_connect (cart, "clicked",
-			G_CALLBACK (angle_clicked_cb),
-			GINT_TO_POINTER (MODE_CART));
-      g_signal_connect (polar, "clicked",
-			G_CALLBACK (angle_clicked_cb),
-			GINT_TO_POINTER (MODE_POLAR));
+      g_signal_connect (cart, "clicked", G_CALLBACK (coords_clicked_cb), NULL);
+      g_signal_connect (polar, "clicked", G_CALLBACK (coords_clicked_cb), NULL);
       gtk_box_pack_start (GTK_BOX (vbox), cart, FALSE, FALSE, 4);
       gtk_box_pack_start (GTK_BOX (vbox), polar, FALSE, FALSE, 4);
     }
@@ -193,18 +256,25 @@ activate (GtkApplication* app,
     
       deg = gtk_radio_button_new_with_label (NULL, "Degrees");
       gtk_widget_set_sensitive (deg, FALSE);
+      g_signal_connect (deg, "clicked", G_CALLBACK (angle_clicked_cb),
+			GINT_TO_POINTER (APL_ANGLE_DEGREES));
 
       rad =
 	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (deg),
 						     "Radians");
       gtk_widget_set_sensitive (rad, FALSE);
+      g_signal_connect (rad, "clicked", G_CALLBACK (angle_clicked_cb),
+			GINT_TO_POINTER (APL_ANGLE_RADIANS));
 
       pirad =
 	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (deg),
 						     "Pi Radians");
       gtk_widget_set_sensitive (pirad, FALSE);
+      g_signal_connect (pirad, "clicked", G_CALLBACK (angle_clicked_cb),
+			GINT_TO_POINTER (APL_ANGLE_PI_RADIANS));
 
-      
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (rad), TRUE);
+
       gtk_box_pack_start (GTK_BOX (vbox), deg, FALSE, FALSE, 4);
       gtk_box_pack_start (GTK_BOX (vbox), rad, FALSE, FALSE, 4);
       gtk_box_pack_start (GTK_BOX (vbox), pirad, FALSE, FALSE, 4);
@@ -251,7 +321,7 @@ activate (GtkApplication* app,
       width = gtk_spin_button_new_with_range (100.0, 10000.0, 1.0);
       gtk_grid_attach (GTK_GRID (vbox_dims), width, 1, 0, 1, 1);
       gtk_spin_button_set_value (GTK_SPIN_BUTTON (width),
-				 (gdouble)INITIAL_WIDTH);
+				 (gdouble)window_width);
 
       GtkWidget *height_label = gtk_label_new ("Height");
       gtk_grid_attach (GTK_GRID (vbox_dims), height_label, 0, 1, 1, 1);
@@ -259,7 +329,7 @@ activate (GtkApplication* app,
       height = gtk_spin_button_new_with_range (100.0, 10000.0, 1.0);
       gtk_grid_attach (GTK_GRID (vbox_dims), height, 1, 1, 1, 1);
       gtk_spin_button_set_value (GTK_SPIN_BUTTON (height),
-				 (gdouble)INITIAL_HEIGHT);
+				 (gdouble)window_height);
 
       GtkWidget *colour_label = gtk_label_new ("Background colour");
       gtk_grid_attach (GTK_GRID (vbox_dims), colour_label, 0, 2, 1, 1);
