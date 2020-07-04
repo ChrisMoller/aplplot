@@ -56,13 +56,6 @@ namespace ascii = boost::spirit::ascii;
 #define DEF_EPSCAIRO	"epscairo"
 #define DEF_SVGCAIRO	"svgcairo"
 
-#define DEF_SCREEN	"screen"
-#define DEF_PNG		"png"
-#define DEF_PDF		"pdf"
-#define DEF_PS		"ps"
-#define DEF_EPS		"eps"
-#define DEF_SVG		"svg"
-
 static int 	plot_width	= DEFAULT_PLOT_WIDTH;
 static int	plot_height	= DEFAULT_PLOT_HEIGHT;
 static string	xlabel;

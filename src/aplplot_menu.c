@@ -38,6 +38,13 @@ static void
 file_clicked_cb (GtkButton *button,
 		 gpointer   user_data)
 {
+  GtkFileFilter *filter = gtk_file_filter_new ();
+  gtk_file_filter_add_pattern (GTK_FILE_FILTER (filter), "*."DEF_PNG);
+  gtk_file_filter_add_pattern (GTK_FILE_FILTER (filter), "*."DEF_PDF);
+  gtk_file_filter_add_pattern (GTK_FILE_FILTER (filter), "*."DEF_PS);
+  gtk_file_filter_add_pattern (GTK_FILE_FILTER (filter), "*."DEF_EPS);
+  gtk_file_filter_add_pattern (GTK_FILE_FILTER (filter), "*."DEF_SVG);
+  gtk_file_filter_set_name (GTK_FILE_FILTER (filter), "Aplplot files");
   GtkWidget *dialog =
     gtk_file_chooser_dialog_new ("File name",
 				 GTK_WINDOW (window),
@@ -47,14 +54,37 @@ file_clicked_cb (GtkButton *button,
 				 "Select",
 				 GTK_RESPONSE_ACCEPT,
 				 NULL);
+  gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog),
+			       GTK_FILE_FILTER (filter));
   gint res = gtk_dialog_run (GTK_DIALOG (dialog));
   if (res == GTK_RESPONSE_ACCEPT) {
     GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
-    if (filename) g_free (filename);
-    filename = gtk_file_chooser_get_filename (chooser);
-    if (filename && *filename) fn_valid = TRUE;
-    gtk_label_set_text (GTK_LABEL (file_name), filename);
-    g_free (filename);
+    gchar *fn = gtk_file_chooser_get_filename (chooser);
+    fn_valid = FALSE;
+    if (fn && *fn) {
+      if (g_str_has_suffix (fn, DEF_PNG) ||
+	  g_str_has_suffix (fn, DEF_PDF) ||
+	  g_str_has_suffix (fn, DEF_PS) ||
+	  g_str_has_suffix (fn, DEF_EPS) ||
+	  g_str_has_suffix (fn, DEF_SVG)) {
+	if (filename) g_free (filename);
+	filename = fn;
+	fn_valid = TRUE;
+	gtk_label_set_text (GTK_LABEL (file_name), filename);
+      }
+    }
+    if (!fn_valid) {
+      GtkWidget *warning =
+	gtk_message_dialog_new (GTK_WINDOW (dialog),
+				GTK_DIALOG_MODAL
+				| GTK_DIALOG_DESTROY_WITH_PARENT,
+				GTK_MESSAGE_WARNING,
+				GTK_BUTTONS_CLOSE,
+				"Unsupported filetype: %s",
+				fn);
+      res = gtk_dialog_run (GTK_DIALOG (warning));
+      gtk_widget_destroy (warning);
+    }
   }
 
   gtk_widget_destroy (dialog);
@@ -124,9 +154,8 @@ hitit_clicked_cb (GtkButton *button,
   aplplot_set_value (val);
 
   if (fn_valid) {
-    if (fn) g_free (fn);
     val.type = VALUE_FILE_NAME;
-    val.val.s = fn = g_strdup (gtk_label_get_text (GTK_LABEL (file_name)));
+    val.val.s = filename;
     aplplot_set_value (val);
   }
   
