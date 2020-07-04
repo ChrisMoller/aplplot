@@ -37,9 +37,12 @@ enum {
       VALUE_DRAW,		// int
       VALUE_COORDS,		// int
       VALUE_ANGLES,		// int
-      VALUE_X_MIN,		// double
-      VALUE_X_MAX,		// double
-      VALUE_COLOUR		// string
+      VALUE_X_ORIGIN,		// double
+      VALUE_X_SPAN,		// double
+      VALUE_COLOUR_RED,		// int
+      VALUE_COLOUR_GREEN,	// int
+      VALUE_COLOUR_BLUE,	// int
+      VALUE_GO
 };
 
 enum {APL_MODE_SET, APL_MODE_XY, APL_MODE_POLAR };

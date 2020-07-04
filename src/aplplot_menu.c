@@ -29,10 +29,15 @@ static GtkWidget *xlog;
 static GtkWidget *ylog;
 static GtkWidget *lines;
 static GtkWidget *points;
+static GtkAdjustment *origin_x_adj;
+static GtkAdjustment *span_x_adj;
+static GtkWidget *embed;
 
 static gboolean fn_valid = FALSE;
 static char *filename = NULL;
 static int angle_mode = APL_ANGLE_RADIANS;
+
+enum {FROM_KILL, FROM_GO};
 
 static void
 file_clicked_cb (GtkButton *button,
@@ -94,10 +99,13 @@ static void
 hitit_clicked_cb (GtkButton *button,
 		  gpointer   user_data)
 {
+  gboolean from = (gboolean)GPOINTER_TO_INT (user_data);
+  static gboolean shown_by_go = FALSE;
   static char *xlbl = NULL;
   static char *ylbl = NULL;
   static char *tlbl = NULL;
-  static char *fn = NULL;
+  static char *fn   = NULL;
+  GdkRGBA rgba;
   value_u val;
 
   val.type = VALUE_WIDTH;
@@ -159,14 +167,35 @@ hitit_clicked_cb (GtkButton *button,
     aplplot_set_value (val);
   }
   
-#if 0
-  value_u valb = { VALUE_EMBED, .val.b = 1};
-  aplplot_set_value (valb);
-  value_u vald = { VALUE_DEST, .val.d = DEST_SVG};
-  aplplot_set_value (vald);
-  value_u valc = { VALUE_ANGLES, .val.c = COORDS_RADIANS};
-  aplplot_set_value (valc);
-#endif
+  val.type = VALUE_X_ORIGIN;
+  val.val.f = gtk_adjustment_get_value (GTK_ADJUSTMENT (origin_x_adj));
+  aplplot_set_value (val);
+  
+  val.type = VALUE_X_SPAN;
+  val.val.f = gtk_adjustment_get_value (GTK_ADJUSTMENT (span_x_adj));
+  aplplot_set_value (val);
+  
+  val.type = VALUE_EMBED;
+  val.val.b =  gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (embed));
+  aplplot_set_value (val);
+  
+  gtk_color_chooser_get_rgba (GTK_COLOR_CHOOSER (colour), &rgba);
+  val.type = VALUE_COLOUR_RED;
+  val.val.i =  (int)(rgba.red * 255);
+  aplplot_set_value (val);
+  val.type = VALUE_COLOUR_GREEN;
+  val.val.i =  (int)(rgba.green * 255);
+  aplplot_set_value (val);
+  val.type = VALUE_COLOUR_BLUE;
+  val.val.i =  (int)(rgba.blue * 255);
+  aplplot_set_value (val);
+
+  if (from == FROM_GO || !shown_by_go) {
+    val.type = VALUE_GO;
+    aplplot_set_value (val);
+    shown_by_go = TRUE;
+  }
+  
 #if 0
   exit (0);
   gtk_main_quit ();
@@ -211,7 +240,8 @@ activate (GtkApplication* app,
 {
   window = gtk_application_window_new (app);
   g_signal_connect (G_OBJECT (window), "destroy",
-                    G_CALLBACK (hitit_clicked_cb), NULL);
+                    G_CALLBACK (hitit_clicked_cb),
+		    GINT_TO_POINTER (FROM_KILL));
   gtk_window_set_title (GTK_WINDOW (window), "Aplplot");
   GtkWidget *frame = gtk_frame_new (NULL);
   gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_IN);
@@ -321,7 +351,7 @@ activate (GtkApplication* app,
       GtkWidget *hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 4);
       gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 4);
 
-      GtkWidget *embed  = gtk_check_button_new_with_label ("Embed");
+      embed  = gtk_check_button_new_with_label ("Embed");
       gtk_box_pack_start (GTK_BOX (hbox), embed, FALSE, FALSE, 4);
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (embed), FALSE);
       g_signal_connect (embed, "toggled", G_CALLBACK (embed_toggled_cb), NULL);
@@ -370,29 +400,29 @@ activate (GtkApplication* app,
       GtkWidget *range_dims = gtk_grid_new ();
       gtk_box_pack_start (GTK_BOX (hbox), range_dims, FALSE, FALSE, 4);
 
-      GtkWidget *min_label = gtk_label_new ("Min X");
+      GtkWidget *min_label = gtk_label_new ("X Origin");
       gtk_grid_attach (GTK_GRID (range_dims), min_label, 0, 0, 1, 1);
 
-      GtkAdjustment *min_x_adj = gtk_adjustment_new (0.0,
-						     -G_MAXDOUBLE,
-						     G_MAXDOUBLE,
-						     1.0,
-						     100.0,
-						     100.0);
-      GtkWidget *min_x = gtk_spin_button_new (min_x_adj, 1.0, 8);
-      gtk_grid_attach (GTK_GRID (range_dims), min_x, 1, 0, 1, 1);
+      origin_x_adj = gtk_adjustment_new (0.0,
+					 -G_MAXDOUBLE,
+					 G_MAXDOUBLE,
+					 1.0,
+					 100.0,
+					 100.0);
+      GtkWidget *origin_x = gtk_spin_button_new (origin_x_adj, 1.0, 8);
+      gtk_grid_attach (GTK_GRID (range_dims), origin_x, 1, 0, 1, 1);
 
-      GtkWidget *max_label = gtk_label_new ("Max X");
-      gtk_grid_attach (GTK_GRID (range_dims), max_label, 0, 1, 1, 1);
+      GtkWidget *span_label = gtk_label_new ("X Span");
+      gtk_grid_attach (GTK_GRID (range_dims), span_label, 0, 1, 1, 1);
       
-      GtkAdjustment *max_x_adj = gtk_adjustment_new (0.0,
-						     -G_MAXDOUBLE,
-						     G_MAXDOUBLE,
-						     1.0,
-						     100.0,
-						     100.0);
-      GtkWidget *max_x = gtk_spin_button_new (max_x_adj, 1.0, 8);
-      gtk_grid_attach (GTK_GRID (range_dims), max_x, 1, 1, 1, 1);
+      span_x_adj = gtk_adjustment_new (-1.0,
+				       -G_MAXDOUBLE,
+				       G_MAXDOUBLE,
+				       1.0,
+				       100.0,
+				       100.0);
+      GtkWidget *span_x = gtk_spin_button_new (span_x_adj, 1.0, 8);
+      gtk_grid_attach (GTK_GRID (range_dims), span_x, 1, 1, 1, 1);
 
       GtkWidget *x_col_lbl = gtk_label_new ("X Column");
       gtk_grid_attach (GTK_GRID (range_dims), x_col_lbl, 0, 2, 1, 1);
@@ -426,7 +456,8 @@ activate (GtkApplication* app,
   }
 
   GtkWidget *hitit = gtk_button_new_with_label ("Go");
-  g_signal_connect (hitit, "clicked", G_CALLBACK (hitit_clicked_cb), NULL);
+  g_signal_connect (hitit, "clicked", G_CALLBACK (hitit_clicked_cb),
+		    GINT_TO_POINTER (FROM_GO));
   gtk_box_pack_start (GTK_BOX (outer_vbox), hitit, FALSE, FALSE, 4);
   
   gtk_widget_show_all (window);

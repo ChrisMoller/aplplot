@@ -77,6 +77,8 @@ static double	xorigin		= 0.0;
 static double	xspan		= -1.0;
 static int      plot_pipe_fd = -1;
 
+Value_P global_B;
+
 string keyword;
 vector<string> args;
 
@@ -150,21 +152,29 @@ aplplot_set_value (value_u val)
   case VALUE_DRAW:
     draw =  val.val.i;
     break;
+  case VALUE_FILE_NAME:
+    filename = val.val.s;
+    break;
+  case VALUE_X_ORIGIN:
+    xorigin = val.val.f;
+    break;
+  case VALUE_X_SPAN:
+    xspan = val.val.f;
+    break;
   case VALUE_EMBED:
     embed = val.val.b;
     break;
-
-
-  case VALUE_FILE_NAME:
-    cout << "VALUE_FILE_NAME = " << val.val.s << endl;
+  case VALUE_COLOUR_RED:
+    bgred   = (unsigned char)val.val.i;
     break;
-  case VALUE_X_MIN:
+  case VALUE_COLOUR_GREEN:
+    bggreen   = (unsigned char)val.val.i;
     break;
-  case VALUE_X_MAX:
+  case VALUE_COLOUR_BLUE:
+    bgblue   = (unsigned char)val.val.i;
     break;
-  case VALUE_COLOUR:
-    cout << "VALUE_CcOLOUR = " << val.val.s << endl;
-    break;
+  case VALUE_GO:
+    eval_B (global_B);
   }
 }
 
@@ -215,16 +225,6 @@ static void set_embed (int arg) {
 static void set_menu (int arg) {
   if (aplplot_menu) {
     (*aplplot_menu) ((void *)aplplot_set_value);
-#if 0
-    if (aplplot_menu_get_string) {
-      char *x_label = (*aplplot_menu_get_string)(VALUE_X_LABEL);
-      cout << "x_label = " << x_label << endl;
-    }
-    if (aplplot_menu_get_double) {
-      double width = (*aplplot_menu_get_double)(VALUE_WIDTH);
-      cout << "width = " << width << endl;
-    }
-#endif
   }
   menu = (args.size () >= 1 && 0 == args[0].compare ("off")) ? false : true;
 }
@@ -972,6 +972,7 @@ eval_B(Value_P B)
   return Token(TOK_APL_VALUE1, IntScalar (pid, LOC));
 }
 
+
 static Token
 eval_AB(Value_P A, Value_P B)
 {
@@ -1003,6 +1004,8 @@ eval_AB(Value_P A, Value_P B)
      string::const_iterator iter = sstr.begin();
      string::const_iterator end  = sstr.end();
 
+     global_B = B;
+     
      while (iter != end) {
        bool rc = phrase_parse(iter, end, g, space);
 
