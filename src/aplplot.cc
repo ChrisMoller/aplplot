@@ -32,6 +32,8 @@
 #include <dlfcn.h>
 #include <plplot/plplot.h>
 
+#define DO_INIT
+#include "modes.h"
 #include "aplplot.hh"
 #include "aplplot_menu.h"
 
@@ -48,14 +50,6 @@ namespace ascii = boost::spirit::ascii;
 #undef PACKAGE_VERSION
 #undef VERSION
 
-
-#define DEF_XCAIRO	"xcairo"
-#define DEF_PNGCAIRO	"pngcairo"
-#define DEF_PDFCAIRO	"pdfcairo"
-#define DEF_PSCAIRO	"pscairo"
-#define DEF_EPSCAIRO	"epscairo"
-#define DEF_SVGCAIRO	"svgcairo"
-
 static int 	plot_width	= DEFAULT_PLOT_WIDTH;
 static int	plot_height	= DEFAULT_PLOT_HEIGHT;
 static string	xlabel;
@@ -71,7 +65,8 @@ static int	draw		= APL_DRAW_LINES;
 static string 	filename;
 static bool     embed		= false;
 static bool     menu		= false;
-static string 	target (DEF_XCAIRO);
+static int	target_idx	= DEF_SCREEN;
+//static string 	target          = mode_strings[DEF_SCREEN].target;
 static unsigned char bgred = 0, bggreen = 0, bgblue = 0;
 static double	xorigin		= 0.0;
 static double	xspan		= -1.0;
@@ -107,7 +102,8 @@ static void reset_options (int arg) {
   killem	= false;
   xcol		= -1;
   draw		= APL_DRAW_LINES;
-  target	= DEF_XCAIRO;
+  target_idx	= DEF_SCREEN;
+  //  target	= mode_strings[DEF_SCREEN].target;
   bgred		= bggreen = bgblue = 0;
   xorigin	= 0.0;
   xspan		= -1.0;
@@ -163,7 +159,7 @@ aplplot_set_value (value_u val)
     break;
   case VALUE_EMBED:
     embed = val.val.b;
-    if (embed) target = DEF_PNGCAIRO;
+    if (embed) target_idx = DEF_PNG;
     break;
   case VALUE_COLOUR_RED:
     bgred   = (unsigned char)val.val.i;
@@ -219,7 +215,7 @@ static void set_killem (int arg) { killem = true; }
 
 static void set_embed (int arg) {
   embed = (args.size () >= 1 && 0 == args[0].compare ("off")) ? false : true;
-  if (embed) target = DEF_PNGCAIRO;
+  if (embed) target_idx = DEF_PNG;
 }
 
 
@@ -303,25 +299,28 @@ static void set_xcol (int arg) {
 static void set_file (int arg) {
   if (args.size () >= 1) filename = args[0];
   else filename.clear ();
-  if (filename.empty () || filename.length () == 0) target = DEF_XCAIRO;
+  if (filename.empty () || filename.length () == 0)
+    target_idx = DEF_SCREEN;
 }
 
 static void set_dest (int arg) {
   if (args.size () >= 1) {
-    if      (0 == args[0].compare (DEF_SCREEN)) target = DEF_XCAIRO;
-    else if (0 == args[0].compare (DEF_PNG))    target = DEF_PNGCAIRO;
-    else if (0 == args[0].compare (DEF_PDF))    target = DEF_PDFCAIRO;
-    else if (0 == args[0].compare (DEF_PS))     target = DEF_PSCAIRO;
-    else if (0 == args[0].compare (DEF_EPS))    target = DEF_EPSCAIRO;
-    else if (0 == args[0].compare (DEF_SVG))    target = DEF_SVGCAIRO;
-    else {
+    int i;
+    for (i = 0; i < MODES_MAX_ENTRY; i++) {
+      string src (mode_strings[i].target);
+      if (0 == args[0].compare (src)) {
+	target_idx = i;
+	break;
+      }
+    }
+    if (i == MODES_MAX_ENTRY) {
       cerr << "option must be one of screen, png, pdf, svg\n";
       cerr << "eps, or ps.\n";
       cerr << "Setting destination to screen\n";
-      target = DEF_XCAIRO;
+      target_idx = DEF_SCREEN;
     }
   }
-  else target = DEF_XCAIRO;
+  else target_idx = DEF_SCREEN;
 }
 
 enum {APL_BG_SET, APL_BG_BLACK, APL_BG_WHITE};
@@ -514,8 +513,8 @@ run_plot_z (PLINT count,
 	    PLFLT *zvec)
 {
   plspage (0.0,  0.0, plot_width, plot_height, 0.0, 0.0);
-  plsdev (target.c_str ());
-  if (0 == target.compare (DEF_XCAIRO))  {
+  plsdev (mode_strings[target_idx].target);
+  if (target_idx == DEF_SCREEN)  {
     pid_t pid = fork ();
     if (pid == 0) {		// child
       setsid ();
@@ -635,20 +634,20 @@ run_plot (APL_Float min_xv,
 	  APL_Float max_yv,
 	  vector<LineClass *> lines)
 {
-  plsdev (target.c_str ());
-  if (0 == target.compare (DEF_XCAIRO))  {
+  plsdev (mode_strings[target_idx].target);
+  if (target_idx == DEF_SCREEN)  {
     pid_t pid = fork ();
     if (pid == 0) {		// child
       setsid ();
     
-	render_xy (min_xv, max_xv, min_yv, max_yv, lines);
+      render_xy (min_xv, max_xv, min_yv, max_yv, lines);
     
-	plend ();
-	wait (NULL);
-	exit (0);
-      }
-      return (int)pid;
+      plend ();
+      wait (NULL);
+      exit (0);
     }
+    return (int)pid;
+  }
   else {
     char *tfile = NULL;
     FILE *po = open_file (&tfile);

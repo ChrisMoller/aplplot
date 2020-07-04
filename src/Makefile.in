@@ -365,7 +365,11 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 lib_LTLIBRARIES = libaplplot.la libaplplot_menu.la
 libaplplot_la_SOURCES = aplplot.cc aplplot.hh
-libaplplot_menu_la_SOURCES = aplplot_menu.c a
+libaplplot_menu_la_SOURCES = aplplot_menu.c
+BUILT_SOURCES = modes.h
+
+#EXTRA_libaplplot_la_DEPENDENCIES = modes.h
+#EXTRA_libaplplot_menu_la_DEPENDENCIES = modes.h
 libaplplot_la_CPPFLAGS = -I$(APL_SOURCES) $(PLPLOT_CFLAGS) \
                           $(GTK_CFLAGS) $(CAIRO_CFLAGS)
 
@@ -375,7 +379,8 @@ libaplplot_la_LIBADD = $(PLPLOT_LIBS)  $(GTK_CFLAGS) $(CAIRO_CFLAGS) \
 
 libaplplot_la_LDFLAGS = -Wl,-R/usr/local/lib/apl
 libaplplot_menu_la_LDFLAGS = $(GTK_LIBS) $(CAIRO_LIBS)
-all: all-am
+all: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) all-am
 
 .SUFFIXES:
 .SUFFIXES: .c .cc .lo .o .obj
@@ -613,13 +618,15 @@ distdir-am: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
-check: check-am
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-am
 all-am: Makefile $(LTLIBRARIES)
 installdirs:
 	for dir in "$(DESTDIR)$(libdir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-am
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-am
 install-exec: install-exec-am
 install-data: install-data-am
 uninstall: uninstall-am
@@ -649,6 +656,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-am
 
 clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
@@ -722,7 +730,7 @@ ps-am:
 
 uninstall-am: uninstall-libLTLIBRARIES
 
-.MAKE: install-am install-strip
+.MAKE: all check install install-am install-strip
 
 .PHONY: CTAGS GTAGS TAGS all all-am am--depfiles check check-am clean \
 	clean-generic clean-libLTLIBRARIES clean-libtool cscopelist-am \
@@ -740,6 +748,9 @@ uninstall-am: uninstall-libLTLIBRARIES
 
 .PRECIOUS: Makefile
 
+
+modes.h : modes.m4
+	m4 < $< > $@
 
 #lib_LTLIBRARIES = libaplplot.la
 #noinst_LTLIBRARIES =

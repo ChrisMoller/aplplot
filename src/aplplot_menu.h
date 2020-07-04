@@ -1,27 +1,12 @@
 #ifndef APLPLOT_MENU_H
 #define APLPLOT_MENU_H
 
+//#include "modes.h"
+
 #define DEFAULT_PLOT_WIDTH	512
 #define DEFAULT_PLOT_HEIGHT	480
 
 typedef void (*aplplot_menu_t) (void *fcn);  
-
-typedef enum {
-	      DEST_SCREEN,
-	      DEST_PNG,
-	      DEST_PDF,
-	      DEST_PS,
-	      DEST_EPS,
-	      DEST_SVG
-} dest_e;
-
-#if 0
-typedef enum {
-	      COORDS_DEGREES,
-	      COORDS_RADIANS,
-	      COORDS_PI_RADIANS
-} coords_e;
-#endif
 
 enum {
       VALUE_WIDTH,		// int
@@ -50,13 +35,6 @@ enum {APL_MODE_SET, APL_MODE_XY, APL_MODE_POLAR };
 enum {APL_ANGLE_SET, APL_ANGLE_DEGREES,
       APL_ANGLE_RADIANS, APL_ANGLE_PI_RADIANS };
 
-#define DEF_SCREEN	"screen"
-#define DEF_PNG		"png"
-#define DEF_PDF		"pdf"
-#define DEF_PS		"ps"
-#define DEF_EPS		"eps"
-#define DEF_SVG		"svg"
-
 #define APL_DRAW_SET		-1
 #define APL_DRAW_NOTHING	0
 #define APL_DRAW_LINES		(1 << 0)
@@ -70,7 +48,7 @@ typedef struct {
     double   f;
     int      i;
     int      b;
-    dest_e   d;
+    int      d;
   } val;
 } value_u;
 

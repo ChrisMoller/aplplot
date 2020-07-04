@@ -1,6 +1,8 @@
 #include <gtk/gtk.h>
 #include <math.h>
 
+#undef DO_INIT
+#include "modes.h"
 #include "aplplot_menu.h"
 
 aplplot_set_value_t aplplot_set_value = NULL;
@@ -44,12 +46,15 @@ file_clicked_cb (GtkButton *button,
 		 gpointer   user_data)
 {
   GtkFileFilter *filter = gtk_file_filter_new ();
-  gtk_file_filter_add_pattern (GTK_FILE_FILTER (filter), "*."DEF_PNG);
-  gtk_file_filter_add_pattern (GTK_FILE_FILTER (filter), "*."DEF_PDF);
-  gtk_file_filter_add_pattern (GTK_FILE_FILTER (filter), "*."DEF_PS);
-  gtk_file_filter_add_pattern (GTK_FILE_FILTER (filter), "*."DEF_EPS);
-  gtk_file_filter_add_pattern (GTK_FILE_FILTER (filter), "*."DEF_SVG);
   gtk_file_filter_set_name (GTK_FILE_FILTER (filter), "Aplplot files");
+  for (int i = 0; i < MODES_MAX_ENTRY; i++) {
+    if (i != DEF_SCREEN) {
+#define BFR_SZ	256
+      gchar tgt[BFR_SZ];
+      g_snprintf (tgt, BFR_SZ, "*.%s", mode_strings[i].ext);
+      gtk_file_filter_add_pattern (GTK_FILE_FILTER (filter), tgt);
+    }
+  }
   GtkWidget *dialog =
     gtk_file_chooser_dialog_new ("File name",
 				 GTK_WINDOW (window),
@@ -67,15 +72,15 @@ file_clicked_cb (GtkButton *button,
     gchar *fn = gtk_file_chooser_get_filename (chooser);
     fn_valid = FALSE;
     if (fn && *fn) {
-      if (g_str_has_suffix (fn, DEF_PNG) ||
-	  g_str_has_suffix (fn, DEF_PDF) ||
-	  g_str_has_suffix (fn, DEF_PS) ||
-	  g_str_has_suffix (fn, DEF_EPS) ||
-	  g_str_has_suffix (fn, DEF_SVG)) {
-	if (filename) g_free (filename);
-	filename = fn;
-	fn_valid = TRUE;
-	gtk_label_set_text (GTK_LABEL (file_name), filename);
+      for (int i = 0; i < MODES_MAX_ENTRY; i++) {
+	if (i != DEF_SCREEN) {
+	  if (g_str_has_suffix (fn, mode_strings[i].ext)) {
+	    if (filename) g_free (filename);
+	    filename = fn;
+	    fn_valid = TRUE;
+	    gtk_label_set_text (GTK_LABEL (file_name), filename);
+	  }
+	}
       }
     }
     if (!fn_valid) {
