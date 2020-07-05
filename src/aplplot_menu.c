@@ -39,8 +39,6 @@ static gboolean fn_valid = FALSE;
 static char *filename = NULL;
 static int angle_mode = APL_ANGLE_RADIANS;
 
-enum {FROM_KILL, FROM_GO};
-
 static void
 file_clicked_cb (GtkButton *button,
 		 gpointer   user_data)
@@ -104,8 +102,6 @@ static void
 hitit_clicked_cb (GtkButton *button,
 		  gpointer   user_data)
 {
-  gboolean from = (gboolean)GPOINTER_TO_INT (user_data);
-  static gboolean shown_by_go = FALSE;
   static char *xlbl = NULL;
   static char *ylbl = NULL;
   static char *tlbl = NULL;
@@ -195,11 +191,8 @@ hitit_clicked_cb (GtkButton *button,
   val.val.i =  (int)(rgba.blue * 255);
   aplplot_set_value (val);
 
-  if (from == FROM_GO || !shown_by_go) {
-    val.type = VALUE_GO;
-    aplplot_set_value (val);
-    shown_by_go = TRUE;
-  }
+  val.type = VALUE_GO;
+  aplplot_set_value (val);
   
 #if 0
   exit (0);
@@ -244,9 +237,11 @@ activate (GtkApplication* app,
           gpointer        user_data)
 {
   window = gtk_application_window_new (app);
+#if 0
   g_signal_connect (G_OBJECT (window), "destroy",
                     G_CALLBACK (hitit_clicked_cb),
 		    GINT_TO_POINTER (FROM_KILL));
+#endif
   gtk_window_set_title (GTK_WINDOW (window), "Aplplot");
   GtkWidget *frame = gtk_frame_new (NULL);
   gtk_frame_set_shadow_type (GTK_FRAME (frame), GTK_SHADOW_IN);
@@ -461,8 +456,7 @@ activate (GtkApplication* app,
   }
 
   GtkWidget *hitit = gtk_button_new_with_label ("Go");
-  g_signal_connect (hitit, "clicked", G_CALLBACK (hitit_clicked_cb),
-		    GINT_TO_POINTER (FROM_GO));
+  g_signal_connect (hitit, "clicked", G_CALLBACK (hitit_clicked_cb), NULL);
   gtk_box_pack_start (GTK_BOX (outer_vbox), hitit, FALSE, FALSE, 4);
   
   gtk_widget_show_all (window);

@@ -1041,7 +1041,7 @@ eval_AB(Value_P A, Value_P B)
      }
    }
 
-   Token rt = B->is_empty () ?
+   Token rt = (menu || B->is_empty ()) ?
      Token(TOK_APL_VALUE1, Str0_0 (LOC)) : eval_B (B);
    return rt;
 }
