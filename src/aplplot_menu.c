@@ -233,13 +233,22 @@ coords_clicked_cb (GtkButton *button,
   gtk_widget_set_sensitive (pirad, active);
 }
 
-gdouble
-cvt_intcol_to_float (int which, value_u vv)
+static gdouble
+get_colour_from_value (int which, value_u vv)
 {
   int vx = 0;
   if (vv.type = which) vx = vv.val.i;
   return ((int)vx)/255.0;
 }
+
+static const gchar *
+get_lbl_from_value (int which, value_u vv)
+{
+  const gchar *rc = NULL;
+  if (vv.type = which) rc = vv.val.s;
+  return rc;
+}
+
 static void
 activate (GtkApplication* app,
           gpointer        user_data)
@@ -409,11 +418,11 @@ activate (GtkApplication* app,
       
       GdkRGBA rgba;
       vv = aplplot_get_value (VALUE_COLOUR_RED);
-      rgba.red = cvt_intcol_to_float (VALUE_COLOUR_RED, vv);
+      rgba.red = get_colour_from_value (VALUE_COLOUR_RED, vv);
       vv = aplplot_get_value (VALUE_COLOUR_GREEN);
-      rgba.green = cvt_intcol_to_float (VALUE_COLOUR_GREEN, vv);
+      rgba.green = get_colour_from_value (VALUE_COLOUR_GREEN, vv);
       vv = aplplot_get_value (VALUE_COLOUR_BLUE);
-      rgba.blue = cvt_intcol_to_float (VALUE_COLOUR_BLUE, vv);
+      rgba.blue = get_colour_from_value (VALUE_COLOUR_BLUE, vv);
       rgba.alpha = 1.0;
       colour = gtk_color_button_new_with_rgba (&rgba);
       gtk_grid_attach (GTK_GRID (vbox_dims), colour, 1, 2, 1, 1);
@@ -456,6 +465,9 @@ activate (GtkApplication* app,
   }
 
   {	// fourth hbox
+    value_u vv;
+    const gchar *lbl;
+    
     GtkWidget *labels = gtk_grid_new ();
     gtk_box_pack_start (GTK_BOX (outer_vbox), labels, FALSE, FALSE, 4);
 
@@ -467,11 +479,23 @@ activate (GtkApplication* app,
     gtk_grid_attach (GTK_GRID (labels), tlabel_lbl, 0, 2, 1, 1);
     
     xlabel = gtk_entry_new ();
+    vv = aplplot_get_value (VALUE_X_LABEL);
+    lbl = get_lbl_from_value (VALUE_X_LABEL, vv);
+    if (lbl) gtk_entry_set_text (GTK_ENTRY (xlabel), lbl);
     gtk_entry_set_placeholder_text (GTK_ENTRY (xlabel), "X label");
+
     ylabel = gtk_entry_new ();
+    vv = aplplot_get_value (VALUE_Y_LABEL);
+    lbl = get_lbl_from_value (VALUE_Y_LABEL, vv);
+    if (lbl) gtk_entry_set_text (GTK_ENTRY (ylabel), lbl);
     gtk_entry_set_placeholder_text (GTK_ENTRY (ylabel), "Y label");
+
     tlabel = gtk_entry_new ();
+    vv = aplplot_get_value (VALUE_T_LABEL);
+    lbl = get_lbl_from_value (VALUE_T_LABEL, vv);
+    if (lbl) gtk_entry_set_text (GTK_ENTRY (tlabel), lbl);
     gtk_entry_set_placeholder_text (GTK_ENTRY (tlabel), "Top label");
+
     gtk_grid_attach (GTK_GRID (labels), xlabel, 1, 0, 1, 1);
     gtk_grid_attach (GTK_GRID (labels), ylabel, 1, 1, 1, 1);
     gtk_grid_attach (GTK_GRID (labels), tlabel, 1, 2, 1, 1);

@@ -147,6 +147,18 @@ aplplot_get_value (int which)
     rc.type = which;
     rc.val.i = plot_height;
     break;
+  case VALUE_X_LABEL:
+    rc.type = which;
+    rc.val.s = (char *)(xlabel.c_str ());
+    break;
+  case VALUE_Y_LABEL:
+    rc.type = which;
+    rc.val.s = (char *)(ylabel.c_str ());
+    break;
+  case VALUE_T_LABEL:
+    rc.type = which;
+    rc.val.s = (char *)(tlabel.c_str ());
+    break;
   case VALUE_COLOUR_RED:
     rc.type = which;
     rc.val.i = (int)bgred;
