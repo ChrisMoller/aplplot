@@ -410,7 +410,7 @@ static void set_dest (int arg) {
   if (args.size () >= 1) {
     int i;
     for (i = 0; i < MODES_MAX_ENTRY; i++) {
-      string src (mode_strings[i].target);
+      string src (mode_strings[i].mode);
       if (0 == args[0].compare (src)) {
 	target_idx = i;
 	break;
