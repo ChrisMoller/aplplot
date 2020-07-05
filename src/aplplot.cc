@@ -20,8 +20,9 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/unordered_map.hpp>
-#include<iostream>
-#include<string>
+#include <iostream>
+#include <string>
+#include <cstring> 
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -66,7 +67,6 @@ static string 	filename;
 static bool     embed		= false;
 static bool     menu		= false;
 static int	target_idx	= DEF_SCREEN;
-//static string 	target          = mode_strings[DEF_SCREEN].target;
 static unsigned char bgred = 0, bggreen = 0, bgblue = 0;
 static double	xorigin		= 0.0;
 static double	xspan		= -1.0;
@@ -111,6 +111,28 @@ static void reset_options (int arg) {
   menu		= false;
 }
 
+static void
+verify_filename ()
+{
+  target_idx = DEF_SCREEN;
+  if (!filename.empty () && filename.length () > 0) {
+    int i;
+    for (i = 0; i < MODES_MAX_ENTRY; i++) {
+      if (i != DEF_SCREEN) {
+	char *loc = strstr ((char *)filename.c_str (), mode_strings[i].ext);
+	if (loc) {
+	  target_idx = i;
+	  break;
+	}
+      }
+    }
+  }
+  if (target_idx == DEF_SCREEN) {
+    cerr << "Unsupported file extension: " << filename << endl;
+    cerr << "Redirecting to the screen.\n";
+  }
+}
+    
 void
 aplplot_set_value (value_u val)
 {
@@ -150,6 +172,7 @@ aplplot_set_value (value_u val)
     break;
   case VALUE_FILE_NAME:
     filename = val.val.s;
+    verify_filename ();
     break;
   case VALUE_X_ORIGIN:
     xorigin = val.val.f;
@@ -297,7 +320,10 @@ static void set_xcol (int arg) {
 }
 
 static void set_file (int arg) {
-  if (args.size () >= 1) filename = args[0];
+  if (args.size () >= 1) {
+    filename = args[0];
+    verify_filename ();
+  }
   else filename.clear ();
   if (filename.empty () || filename.length () == 0)
     target_idx = DEF_SCREEN;
@@ -398,7 +424,8 @@ kwd_s kwds[] = {
   {"xdomain",		set_domain,	0},
   {"bgwhite",		set_background,	APL_BG_WHITE},
   {"bgblack",		set_background,	APL_BG_BLACK},
-  {"background",	set_background,	APL_BG_SET}
+  {"background",	set_background,	APL_BG_SET},
+  {"bg",		set_background,	APL_BG_SET}
 };
 
 class LineClass {

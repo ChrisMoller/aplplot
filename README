@@ -157,5 +157,5 @@ See http://github.com/ChrisMoller/aplplot/wiki for more examples.
 
 Note also that using the --eval option of GNU APL, things like the following work as expected:
 
-	apl --LX "'libaplplot.so' ⎕FX 'plot'" --eval "'background 4 78 220' plot 2○(⍳128)÷6"
+   apl --LX "'libaplplot.so' ⎕FX 'plot'" --eval "' file sine.png; tlabel Sine' plot 2○(⍳128)÷6"
 
