@@ -6,7 +6,7 @@
 #define DEFAULT_PLOT_WIDTH	512
 #define DEFAULT_PLOT_HEIGHT	480
 
-typedef void (*aplplot_menu_t) (void *fcn);  
+typedef void (*aplplot_menu_t) (void *set_fcn, void *get_fcn);  
 
 enum {
       VALUE_WIDTH,		// int
@@ -27,7 +27,8 @@ enum {
       VALUE_COLOUR_RED,		// int
       VALUE_COLOUR_GREEN,	// int
       VALUE_COLOUR_BLUE,	// int
-      VALUE_GO
+      VALUE_GO,
+      VALUE_ERR
 };
 
 enum {APL_MODE_SET, APL_MODE_XY, APL_MODE_POLAR };
@@ -53,5 +54,6 @@ typedef struct {
 } value_u;
 
 typedef void (*aplplot_set_value_t) (value_u val);  
+typedef value_u (*aplplot_get_value_t) (int whichl);  
 
 #endif // APLPLOT_MENU_H

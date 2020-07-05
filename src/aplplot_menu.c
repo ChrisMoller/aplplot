@@ -6,6 +6,7 @@
 #include "aplplot_menu.h"
 
 aplplot_set_value_t aplplot_set_value = NULL;
+aplplot_get_value_t aplplot_get_value = NULL;
 
 static gint window_width  = DEFAULT_PLOT_WIDTH;
 static gint window_height = DEFAULT_PLOT_HEIGHT;
@@ -232,6 +233,13 @@ coords_clicked_cb (GtkButton *button,
   gtk_widget_set_sensitive (pirad, active);
 }
 
+gdouble
+cvt_intcol_to_float (int which, value_u vv)
+{
+  int vx = 0;
+  if (vv.type = which) vx = vv.val.i;
+  return ((int)vx)/255.0;
+}
 static void
 activate (GtkApplication* app,
           gpointer        user_data)
@@ -371,6 +379,8 @@ activate (GtkApplication* app,
     gtk_container_add (GTK_CONTAINER (outer_vbox), hbox);
 
     {
+      value_u vv;
+      
       GtkWidget *vbox_dims = gtk_grid_new ();
       gtk_box_pack_start (GTK_BOX (hbox), vbox_dims, FALSE, FALSE, 4);
 
@@ -379,21 +389,33 @@ activate (GtkApplication* app,
       
       width = gtk_spin_button_new_with_range (100.0, 10000.0, 1.0);
       gtk_grid_attach (GTK_GRID (vbox_dims), width, 1, 0, 1, 1);
-      gtk_spin_button_set_value (GTK_SPIN_BUTTON (width),
-				 (gdouble)window_width);
+      vv = aplplot_get_value (VALUE_WIDTH);
+      gdouble ww =
+	(gdouble)((vv.type == VALUE_WIDTH) ? vv.val.i : window_width);
+      gtk_spin_button_set_value (GTK_SPIN_BUTTON (width), ww);
 
       GtkWidget *height_label = gtk_label_new ("Height");
       gtk_grid_attach (GTK_GRID (vbox_dims), height_label, 0, 1, 1, 1);
       
       height = gtk_spin_button_new_with_range (100.0, 10000.0, 1.0);
       gtk_grid_attach (GTK_GRID (vbox_dims), height, 1, 1, 1, 1);
-      gtk_spin_button_set_value (GTK_SPIN_BUTTON (height),
-				 (gdouble)window_height);
+      vv = aplplot_get_value (VALUE_HEIGHT);
+      gdouble hh =
+	(gdouble)((vv.type == VALUE_HEIGHT) ? vv.val.i : window_height);
+      gtk_spin_button_set_value (GTK_SPIN_BUTTON (height), hh);
 
       GtkWidget *colour_label = gtk_label_new ("Background colour");
       gtk_grid_attach (GTK_GRID (vbox_dims), colour_label, 0, 2, 1, 1);
       
-      colour = gtk_color_button_new ();
+      GdkRGBA rgba;
+      vv = aplplot_get_value (VALUE_COLOUR_RED);
+      rgba.red = cvt_intcol_to_float (VALUE_COLOUR_RED, vv);
+      vv = aplplot_get_value (VALUE_COLOUR_GREEN);
+      rgba.green = cvt_intcol_to_float (VALUE_COLOUR_GREEN, vv);
+      vv = aplplot_get_value (VALUE_COLOUR_BLUE);
+      rgba.blue = cvt_intcol_to_float (VALUE_COLOUR_BLUE, vv);
+      rgba.alpha = 1.0;
+      colour = gtk_color_button_new_with_rgba (&rgba);
       gtk_grid_attach (GTK_GRID (vbox_dims), colour, 1, 2, 1, 1);
     }
     {
@@ -510,9 +532,15 @@ command_line_cb (GApplication            *application,
 }
 
 void
-aplplot_menu (void *fcn)
+aplplot_menu (void *set_fcn, void *get_fcn)
 {
-  aplplot_set_value = (aplplot_set_value_t)fcn;
+  aplplot_set_value = (aplplot_set_value_t)set_fcn;
+  aplplot_get_value = (aplplot_get_value_t)get_fcn;
+
+#if 0
+  value_u vv = aplplot_get_value (VALUE_WIDTH);
+  g_print ("vv = %d %d\n", vv.type, vv.val.i);
+#endif
 
   app = gtk_application_new ("org.gtk.example",
                              G_APPLICATION_HANDLES_COMMAND_LINE);

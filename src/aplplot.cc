@@ -133,6 +133,36 @@ verify_filename ()
   }
 }
     
+value_u
+aplplot_get_value (int which)
+{
+  value_u rc;
+  rc.type = VALUE_ERR;
+  switch(which) {
+  case VALUE_WIDTH:
+    rc.type = which;
+    rc.val.i = plot_width;
+    break;
+  case VALUE_HEIGHT:
+    rc.type = which;
+    rc.val.i = plot_height;
+    break;
+  case VALUE_COLOUR_RED:
+    rc.type = which;
+    rc.val.i = (int)bgred;
+    break;
+  case VALUE_COLOUR_GREEN:
+    rc.type = which;
+    rc.val.i = (int)bggreen;
+    break;
+  case VALUE_COLOUR_BLUE:
+    rc.type = which;
+    rc.val.i = (int)bgblue;
+    break;
+  }
+  return rc;
+}
+    
 void
 aplplot_set_value (value_u val)
 {
@@ -195,14 +225,10 @@ aplplot_set_value (value_u val)
     break;
   case VALUE_GO:
     eval_B (global_B);
+  default:		// do nothing
+    break;
   }
 }
-
-//void
-//talk_back ()
-//{
-//  cout << "heard something\n";
-//}
 
 static void set_width (int arg) {
   if (args.size () >= 1) istringstream (args[0]) >> plot_width;
@@ -244,7 +270,7 @@ static void set_embed (int arg) {
 
 static void set_menu (int arg) {
   if (aplplot_menu) {
-    (*aplplot_menu) ((void *)aplplot_set_value);
+    (*aplplot_menu) ((void *)aplplot_set_value, (void *)aplplot_get_value);
   }
   menu = (args.size () >= 1 && 0 == args[0].compare ("off")) ? false : true;
 }
