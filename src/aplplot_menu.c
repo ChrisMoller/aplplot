@@ -234,20 +234,50 @@ coords_clicked_cb (GtkButton *button,
 }
 
 static gdouble
-get_colour_from_value (int which, value_u vv)
+get_colour_from_value (int which)
 {
+  value_u vv = aplplot_get_value (which);
   int vx = 0;
   if (vv.type = which) vx = vv.val.i;
   return ((int)vx)/255.0;
 }
 
 static const gchar *
-get_lbl_from_value (int which, value_u vv)
+get_string_from_value (int which)
 {
+  value_u vv = aplplot_get_value (which);
   const gchar *rc = NULL;
   if (vv.type = which) rc = vv.val.s;
   return rc;
 }
+
+static gdouble
+get_double_from_value (int which, gdouble dflt)
+{
+  value_u vv = aplplot_get_value (which);
+  gdouble rc = dflt;
+  if (vv.type = which) rc = vv.val.f;
+  return rc;
+}
+
+static gboolean
+get_boolean_from_active (int which)
+{
+  value_u vv = aplplot_get_value (which);
+  gboolean rc = FALSE;
+  if (vv.type = which) rc = vv.val.b;
+  return rc;
+}
+
+static gboolean
+get_int_from_active (int which)
+{
+  value_u vv = aplplot_get_value (which);
+  gint rc = FALSE;
+  if (vv.type = which) rc = vv.val.i;
+  return rc;
+}
+
 
 static void
 activate (GtkApplication* app,
@@ -281,6 +311,10 @@ activate (GtkApplication* app,
       xlog =
 	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (xlinear),
 						     "X Logarithmic");
+      
+      gboolean log_active = get_boolean_from_active (VALUE_X_LOG);
+      GtkWidget *ww = log_active ? xlog : xlinear;
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (ww), TRUE);
 
       GtkWidget *ylinear =
 	gtk_radio_button_new_with_label (NULL, "Y Linear");
@@ -288,6 +322,9 @@ activate (GtkApplication* app,
       ylog =
 	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (ylinear),
 						     "Y Logarithmic");
+      log_active = get_boolean_from_active (VALUE_Y_LOG);
+      ww = log_active ? ylog : ylinear;
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (ww), TRUE);
 
       gtk_box_pack_start (GTK_BOX (vbox), xlinear, FALSE, FALSE, 4);
       gtk_box_pack_start (GTK_BOX (vbox), xlog, FALSE, FALSE, 4);
@@ -302,11 +339,19 @@ activate (GtkApplication* app,
       lines  = gtk_check_button_new_with_label ("Lines");
       points = gtk_check_button_new_with_label ("Points");
 
-      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (lines), TRUE);
+      int draw = get_int_from_active (VALUE_DRAW);
+
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (lines),
+				    draw & APL_DRAW_LINES);
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (points),
+				    draw & APL_DRAW_POINTS);
+      
       gtk_box_pack_start (GTK_BOX (vbox), lines, FALSE, FALSE, 4);
       gtk_box_pack_start (GTK_BOX (vbox), points, FALSE, FALSE, 4);
     }
 
+    gboolean polar_active = TRUE;
+    
     {
       GtkWidget *vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 4);
       gtk_box_pack_start (GTK_BOX (hbox), vbox, FALSE, FALSE, 4);
@@ -318,7 +363,10 @@ activate (GtkApplication* app,
       polar =
 	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (cart),
 						     "Polar");
-      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (polar), FALSE);
+      int coords = get_int_from_active (VALUE_COORDS);
+      GtkWidget *ww = (coords == APL_MODE_XY) ? cart : polar;
+      polar_active = coords == APL_MODE_POLAR;
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (ww), TRUE);
 
       g_signal_connect (cart, "clicked", G_CALLBACK (coords_clicked_cb), NULL);
       g_signal_connect (polar, "clicked", G_CALLBACK (coords_clicked_cb), NULL);
@@ -331,26 +379,33 @@ activate (GtkApplication* app,
       gtk_box_pack_start (GTK_BOX (hbox), vbox, FALSE, FALSE, 4);
     
       deg = gtk_radio_button_new_with_label (NULL, "Degrees");
-      gtk_widget_set_sensitive (deg, FALSE);
       g_signal_connect (deg, "clicked", G_CALLBACK (angle_clicked_cb),
 			GINT_TO_POINTER (APL_ANGLE_DEGREES));
 
       rad =
 	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (deg),
 						     "Radians");
-      gtk_widget_set_sensitive (rad, FALSE);
       g_signal_connect (rad, "clicked", G_CALLBACK (angle_clicked_cb),
 			GINT_TO_POINTER (APL_ANGLE_RADIANS));
 
       pirad =
 	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (deg),
 						     "Pi Radians");
-      gtk_widget_set_sensitive (pirad, FALSE);
       g_signal_connect (pirad, "clicked", G_CALLBACK (angle_clicked_cb),
 			GINT_TO_POINTER (APL_ANGLE_PI_RADIANS));
 
-      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (rad), TRUE);
+      int angles = get_int_from_active (VALUE_ANGLES);
+      GtkWidget *ww = rad;
+      switch(angles) {
+      case APL_ANGLE_DEGREES:		ww = deg;	break;
+      case APL_ANGLE_RADIANS:		ww = rad;	break;
+      case APL_ANGLE_PI_RADIANS:	ww = pirad;	break;
+      }
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (ww), TRUE);
 
+      gtk_widget_set_sensitive (deg, polar_active);
+      gtk_widget_set_sensitive (rad, polar_active);
+      gtk_widget_set_sensitive (pirad, polar_active);
       gtk_box_pack_start (GTK_BOX (vbox), deg, FALSE, FALSE, 4);
       gtk_box_pack_start (GTK_BOX (vbox), rad, FALSE, FALSE, 4);
       gtk_box_pack_start (GTK_BOX (vbox), pirad, FALSE, FALSE, 4);
@@ -417,24 +472,24 @@ activate (GtkApplication* app,
       gtk_grid_attach (GTK_GRID (vbox_dims), colour_label, 0, 2, 1, 1);
       
       GdkRGBA rgba;
-      vv = aplplot_get_value (VALUE_COLOUR_RED);
-      rgba.red = get_colour_from_value (VALUE_COLOUR_RED, vv);
-      vv = aplplot_get_value (VALUE_COLOUR_GREEN);
-      rgba.green = get_colour_from_value (VALUE_COLOUR_GREEN, vv);
-      vv = aplplot_get_value (VALUE_COLOUR_BLUE);
-      rgba.blue = get_colour_from_value (VALUE_COLOUR_BLUE, vv);
+      rgba.red = get_colour_from_value (VALUE_COLOUR_RED);
+      rgba.green = get_colour_from_value (VALUE_COLOUR_GREEN);
+      rgba.blue = get_colour_from_value (VALUE_COLOUR_BLUE);
       rgba.alpha = 1.0;
       colour = gtk_color_button_new_with_rgba (&rgba);
       gtk_grid_attach (GTK_GRID (vbox_dims), colour, 1, 2, 1, 1);
     }
     {
+      gdouble cc;
+
       GtkWidget *range_dims = gtk_grid_new ();
       gtk_box_pack_start (GTK_BOX (hbox), range_dims, FALSE, FALSE, 4);
 
       GtkWidget *min_label = gtk_label_new ("X Origin");
       gtk_grid_attach (GTK_GRID (range_dims), min_label, 0, 0, 1, 1);
 
-      origin_x_adj = gtk_adjustment_new (0.0,
+      cc = get_double_from_value (VALUE_X_ORIGIN, 0.0);
+      origin_x_adj = gtk_adjustment_new (cc,
 					 -G_MAXDOUBLE,
 					 G_MAXDOUBLE,
 					 1.0,
@@ -446,7 +501,8 @@ activate (GtkApplication* app,
       GtkWidget *span_label = gtk_label_new ("X Span");
       gtk_grid_attach (GTK_GRID (range_dims), span_label, 0, 1, 1, 1);
       
-      span_x_adj = gtk_adjustment_new (-1.0,
+      cc = get_double_from_value (VALUE_X_SPAN, -1.0);
+      span_x_adj = gtk_adjustment_new (cc,
 				       -G_MAXDOUBLE,
 				       G_MAXDOUBLE,
 				       1.0,
@@ -459,13 +515,13 @@ activate (GtkApplication* app,
       gtk_grid_attach (GTK_GRID (range_dims), x_col_lbl, 0, 2, 1, 1);
       x_col = gtk_spin_button_new_with_range (00, 1000.0, 1.0);
       gtk_grid_attach (GTK_GRID (range_dims), x_col, 1, 2, 1, 1);
-      gtk_spin_button_set_value (GTK_SPIN_BUTTON (x_col), 0.0);
+      cc = get_double_from_value (VALUE_X_COL, 0.0);
+      gtk_spin_button_set_value (GTK_SPIN_BUTTON (x_col), cc);
     }
     
   }
 
   {	// fourth hbox
-    value_u vv;
     const gchar *lbl;
     
     GtkWidget *labels = gtk_grid_new ();
@@ -479,20 +535,17 @@ activate (GtkApplication* app,
     gtk_grid_attach (GTK_GRID (labels), tlabel_lbl, 0, 2, 1, 1);
     
     xlabel = gtk_entry_new ();
-    vv = aplplot_get_value (VALUE_X_LABEL);
-    lbl = get_lbl_from_value (VALUE_X_LABEL, vv);
+    lbl = get_string_from_value (VALUE_X_LABEL);
     if (lbl) gtk_entry_set_text (GTK_ENTRY (xlabel), lbl);
     gtk_entry_set_placeholder_text (GTK_ENTRY (xlabel), "X label");
 
     ylabel = gtk_entry_new ();
-    vv = aplplot_get_value (VALUE_Y_LABEL);
-    lbl = get_lbl_from_value (VALUE_Y_LABEL, vv);
+    lbl = get_string_from_value (VALUE_Y_LABEL);
     if (lbl) gtk_entry_set_text (GTK_ENTRY (ylabel), lbl);
     gtk_entry_set_placeholder_text (GTK_ENTRY (ylabel), "Y label");
 
     tlabel = gtk_entry_new ();
-    vv = aplplot_get_value (VALUE_T_LABEL);
-    lbl = get_lbl_from_value (VALUE_T_LABEL, vv);
+    lbl = get_string_from_value (VALUE_T_LABEL);
     if (lbl) gtk_entry_set_text (GTK_ENTRY (tlabel), lbl);
     gtk_entry_set_placeholder_text (GTK_ENTRY (tlabel), "Top label");
 

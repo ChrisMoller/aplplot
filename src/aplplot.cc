@@ -103,7 +103,6 @@ static void reset_options (int arg) {
   xcol		= -1;
   draw		= APL_DRAW_LINES;
   target_idx	= DEF_SCREEN;
-  //  target	= mode_strings[DEF_SCREEN].target;
   bgred		= bggreen = bgblue = 0;
   xorigin	= 0.0;
   xspan		= -1.0;
@@ -170,6 +169,38 @@ aplplot_get_value (int which)
   case VALUE_COLOUR_BLUE:
     rc.type = which;
     rc.val.i = (int)bgblue;
+    break;
+  case VALUE_X_COL:
+    rc.type = which;
+    rc.val.i = xcol;
+    break;
+  case VALUE_X_ORIGIN:
+    rc.type = which;
+    rc.val.f = xorigin;
+    break;
+  case VALUE_X_SPAN:
+    rc.type = which;
+    rc.val.f = xspan;
+    break;
+  case VALUE_X_LOG:
+    rc.type = which;
+    rc.val.b = xlog;
+    break;
+  case VALUE_Y_LOG:
+    rc.type = which;
+    rc.val.b = ylog;
+    break;
+  case VALUE_DRAW:
+    rc.type = which;
+    rc.val.i = draw;
+    break;
+  case VALUE_COORDS:
+    rc.type = which;
+    rc.val.i = mode;
+    break;
+  case VALUE_ANGLES:
+    rc.type = which;
+    rc.val.i = angle_units;
     break;
   }
   return rc;
