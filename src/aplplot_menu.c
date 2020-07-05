@@ -238,7 +238,7 @@ get_colour_from_value (int which)
 {
   value_u vv = aplplot_get_value (which);
   int vx = 0;
-  if (vv.type = which) vx = vv.val.i;
+  if (vv.type == which) vx = vv.val.i;
   return ((int)vx)/255.0;
 }
 
@@ -247,7 +247,7 @@ get_string_from_value (int which)
 {
   value_u vv = aplplot_get_value (which);
   const gchar *rc = NULL;
-  if (vv.type = which) rc = vv.val.s;
+  if (vv.type == which) rc = vv.val.s;
   return rc;
 }
 
@@ -256,25 +256,25 @@ get_double_from_value (int which, gdouble dflt)
 {
   value_u vv = aplplot_get_value (which);
   gdouble rc = dflt;
-  if (vv.type = which) rc = vv.val.f;
+  if (vv.type == which) rc = vv.val.f;
   return rc;
 }
 
 static gboolean
-get_boolean_from_active (int which)
+get_boolean_from_value (int which)
 {
   value_u vv = aplplot_get_value (which);
   gboolean rc = FALSE;
-  if (vv.type = which) rc = vv.val.b;
+  if (vv.type == which) rc = vv.val.b;
   return rc;
 }
 
 static gboolean
-get_int_from_active (int which)
+get_int_from_value (int which, int dflt)
 {
   value_u vv = aplplot_get_value (which);
-  gint rc = FALSE;
-  if (vv.type = which) rc = vv.val.i;
+  gint rc = dflt;
+  if (vv.type == which) rc = vv.val.i;
   return rc;
 }
 
@@ -312,7 +312,7 @@ activate (GtkApplication* app,
 	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (xlinear),
 						     "X Logarithmic");
       
-      gboolean log_active = get_boolean_from_active (VALUE_X_LOG);
+      gboolean log_active = get_boolean_from_value (VALUE_X_LOG);
       GtkWidget *ww = log_active ? xlog : xlinear;
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (ww), TRUE);
 
@@ -322,7 +322,7 @@ activate (GtkApplication* app,
       ylog =
 	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (ylinear),
 						     "Y Logarithmic");
-      log_active = get_boolean_from_active (VALUE_Y_LOG);
+      log_active = get_boolean_from_value (VALUE_Y_LOG);
       ww = log_active ? ylog : ylinear;
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (ww), TRUE);
 
@@ -339,7 +339,7 @@ activate (GtkApplication* app,
       lines  = gtk_check_button_new_with_label ("Lines");
       points = gtk_check_button_new_with_label ("Points");
 
-      int draw = get_int_from_active (VALUE_DRAW);
+      int draw = get_int_from_value (VALUE_DRAW, APL_DRAW_LINES);
 
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (lines),
 				    draw & APL_DRAW_LINES);
@@ -363,7 +363,7 @@ activate (GtkApplication* app,
       polar =
 	gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (cart),
 						     "Polar");
-      int coords = get_int_from_active (VALUE_COORDS);
+      int coords = get_int_from_value (VALUE_COORDS, APL_MODE_XY);
       GtkWidget *ww = (coords == APL_MODE_XY) ? cart : polar;
       polar_active = coords == APL_MODE_POLAR;
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (ww), TRUE);
@@ -394,7 +394,7 @@ activate (GtkApplication* app,
       g_signal_connect (pirad, "clicked", G_CALLBACK (angle_clicked_cb),
 			GINT_TO_POINTER (APL_ANGLE_PI_RADIANS));
 
-      int angles = get_int_from_active (VALUE_ANGLES);
+      int angles = get_int_from_value (VALUE_ANGLES, APL_ANGLE_DEGREES);
       GtkWidget *ww = rad;
       switch(angles) {
       case APL_ANGLE_DEGREES:		ww = deg;	break;
@@ -423,17 +423,19 @@ activate (GtkApplication* app,
       GtkWidget *hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 4);
       gtk_box_pack_start (GTK_BOX (vbox), hbox, FALSE, FALSE, 4);
 
+      gboolean ee = get_boolean_from_value (VALUE_EMBED);
       embed  = gtk_check_button_new_with_label ("Embed");
       gtk_box_pack_start (GTK_BOX (hbox), embed, FALSE, FALSE, 4);
-      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (embed), FALSE);
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (embed), ee);
       g_signal_connect (embed, "toggled", G_CALLBACK (embed_toggled_cb), NULL);
     
       file_button = gtk_button_new_with_label ("Set file name");
       g_signal_connect (file_button, "clicked",
 			G_CALLBACK (file_clicked_cb), NULL);
       gtk_box_pack_start (GTK_BOX (hbox), file_button, FALSE, FALSE, 4);
-      
-      file_name = gtk_label_new ("(unset)");
+
+      gchar *fn = (gchar *)get_string_from_value (VALUE_FILE_NAME);
+      file_name = gtk_label_new (fn);
       gtk_box_pack_start (GTK_BOX (hbox), file_name, TRUE, TRUE, 4);
     }
   }
@@ -454,8 +456,7 @@ activate (GtkApplication* app,
       width = gtk_spin_button_new_with_range (100.0, 10000.0, 1.0);
       gtk_grid_attach (GTK_GRID (vbox_dims), width, 1, 0, 1, 1);
       vv = aplplot_get_value (VALUE_WIDTH);
-      gdouble ww =
-	(gdouble)((vv.type == VALUE_WIDTH) ? vv.val.i : window_width);
+      gdouble ww = (gdouble)get_int_from_value (VALUE_WIDTH, window_width);
       gtk_spin_button_set_value (GTK_SPIN_BUTTON (width), ww);
 
       GtkWidget *height_label = gtk_label_new ("Height");
@@ -464,8 +465,7 @@ activate (GtkApplication* app,
       height = gtk_spin_button_new_with_range (100.0, 10000.0, 1.0);
       gtk_grid_attach (GTK_GRID (vbox_dims), height, 1, 1, 1, 1);
       vv = aplplot_get_value (VALUE_HEIGHT);
-      gdouble hh =
-	(gdouble)((vv.type == VALUE_HEIGHT) ? vv.val.i : window_height);
+      gdouble hh = (gdouble)get_int_from_value (VALUE_HEIGHT, window_height);
       gtk_spin_button_set_value (GTK_SPIN_BUTTON (height), hh);
 
       GtkWidget *colour_label = gtk_label_new ("Background colour");

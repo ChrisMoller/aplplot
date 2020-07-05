@@ -202,6 +202,14 @@ aplplot_get_value (int which)
     rc.type = which;
     rc.val.i = angle_units;
     break;
+  case VALUE_EMBED:
+    rc.type = which;
+    rc.val.b = embed;
+    break;
+  case VALUE_FILE_NAME:
+    rc.type = which;
+    rc.val.s = (char *)filename.c_str ();
+    break;
   }
   return rc;
 }
