@@ -1,0 +1,9 @@
+#!/bin/sh
+
+rm -f *.avi *.png *.mkv *.gif
+
+./animate 128
+ffmpeg -framerate 20 -i frame%04d.png sine.avi
+ffmpeg -framerate 20 -i frame%04d.png sine.mkv
+ffmpeg -framerate 20 -i frame%04d.png sine.gif
+

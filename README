@@ -159,3 +159,5 @@ Note also that using the --eval option of GNU APL, things like the following wor
 
    apl --LX "'libaplplot.so' ⎕FX 'plot'" --eval "' file sine.png; tlabel Sine' plot 2○(⍳128)÷6"
 
+
+Also note that you can make videos using the above; see the video directory.

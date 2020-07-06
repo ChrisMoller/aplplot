@@ -1,4 +1,4 @@
-AC_INIT([APL plot native function], [1.1], [moller@mollerware.com],[aplplot])
+AC_INIT([APL plot native function], [2.0], [moller@mollerware.com],[aplplot])
 AC_PREFIX_DEFAULT( /usr/local )
 AC_USE_SYSTEM_EXTENSIONS
 AC_CONFIG_HEADERS([config.h])

@@ -1,0 +1,8 @@
+For a little fun and games, you can use aplplot to create videos; in this
+directory are three videos, an avi, an mkv, and a gif, made from the same
+seguence of frames--compile animate.c and run mkvid to see how it works.
+
+
+Note that I tried this using both bash and perl, but both get confused by the
+--LX so, in frustration, I wrote the driver in C.  If anyone can fix the bash
+or perl versions, I'd appreciate if you'd let me know how.
