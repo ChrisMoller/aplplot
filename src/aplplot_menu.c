@@ -448,6 +448,17 @@ activate (GtkApplication* app,
       gtk_box_pack_start (GTK_BOX (hbox), embed, FALSE, FALSE, 4);
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (embed), ee);
       g_signal_connect (embed, "toggled", G_CALLBACK (embed_toggled_cb), NULL);
+      char *flag_file =  NULL;
+      flag_file = g_strdup_printf ("/var/run/user/%d/%d/aplwrap",
+				   (int)getuid (), (int)getppid ());
+      gboolean flag_exists = FALSE;
+      if (flag_file) {
+	flag_exists = g_file_test (flag_file,
+				   G_FILE_TEST_EXISTS |
+				   G_FILE_TEST_IS_REGULAR);
+	g_free (flag_file);
+      }
+      gtk_widget_set_sensitive (embed,	flag_exists);		      
     
       file_button = gtk_button_new_with_label ("Set file name");
       g_signal_connect (file_button, "clicked",

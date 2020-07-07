@@ -1158,7 +1158,6 @@ eval_ident_Bx(Value_P B, Axis x)
 void *
 get_function_mux(const char * function_name)
 {
-
   if (!menu_handle) {
     menu_handle = dlopen ("/usr/local/lib/apl/libaplplot_menu.so", RTLD_NOW);
     aplplot_menu = (aplplot_menu_t)dlsym (menu_handle, "aplplot_menu");
