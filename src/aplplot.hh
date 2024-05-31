@@ -22,6 +22,8 @@
 #include <errno.h>
 #include <string.h>
 
+#define cfg_ASSERT_LEVEL_WANTED 0
+#define cfg_SHORT_VALUE_LENGTH_WANTED 1
 #include <Native_interface.hh>
 
 /**
@@ -74,7 +76,7 @@ extern "C" void * get_function_mux(const char * function_name);
 static Fun_signature get_signature();
 static Token eval_fill_B(Value_P B);
 static Token eval_fill_AB(Value_P A, Value_P B);
-static Token eval_ident_Bx(Value_P B, Axis x);
+static Token eval_ident_Bx(Value_P B, sAxis x);
 
 Fun_signature get_signature() { return SIG_Z_A_F2_B; }
 

@@ -17,6 +17,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#define cfg_ASSERT_LEVEL_WANTED 0
+#define cfg_SHORT_VALUE_LENGTH_WANTED 1
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/unordered_map.hpp>
@@ -845,7 +847,7 @@ plot_xy (ShapeItem pxcol, Value_P B)
 
     loop(p, rows) {
       if (pxcol != -1) {
-	const Cell & cell_Bx = B->get_ravel (pxcol + p * cols);
+	const Cell & cell_Bx = B->get_cravel (pxcol + p * cols);
 	xv = cell_Bx.get_real_value ();
       }
       else {
@@ -854,7 +856,7 @@ plot_xy (ShapeItem pxcol, Value_P B)
       }
       if (xlog) xv = log (xv);
       
-      const Cell & cell_By = B->get_ravel (q + p * cols);
+      const Cell & cell_By = B->get_cravel (q + p * cols);
       yv = cell_By.get_real_value ();
       if (ylog) yv = log (yv);
 
@@ -898,7 +900,7 @@ plot_y (Value_P B)
   PLFLT *yvec = new PLFLT[B->element_count ()];
 	  
   loop(p, B->element_count ()) {
-    const Cell & cell_B = B->get_ravel(p);
+    const Cell & cell_B = B->get_cravel(p);
     xv = (APL_Float)p;
     yv = cell_B.get_real_value ();
     if (ylog) yv = log (yv);
@@ -992,7 +994,7 @@ eval_B(Value_P B)
   int pid = -1;
   
   const ShapeItem count    = B->element_count();
-  const Rank      rank     = B->get_rank();
+  const auto      rank     = B->get_rank();
   const CellType  celltype = B->deep_cell_types();
 
   if (!(celltype & ~CT_NUMERIC)) {
@@ -1012,7 +1014,7 @@ eval_B(Value_P B)
 	PLFLT *zvec = new PLFLT[count];
 	
 	loop(p, count) {
-	  const Cell & cell_B = B->get_ravel(p);
+	  const Cell & cell_B = B->get_cravel(p);
 	  xv = (APL_Float)p;
 	  yv = cell_B.get_real_value ();
 	  zv = cell_B.get_imag_value ();
@@ -1049,7 +1051,7 @@ eval_B(Value_P B)
 	    our pids being killed.  (killed ppid == our ppid?)
 	 ***/
 	loop(p, count) {
-	  const Cell & cell_B = B->get_ravel(p);
+	  const Cell & cell_B = B->get_cravel(p);
 	  APL_Integer vv = cell_B.get_int_value ();
 	  killAllChildProcess ((int)vv);
 	}
@@ -1149,9 +1151,10 @@ eval_fill_AB(Value_P A, Value_P B)
 }
 
 static Token
-eval_ident_Bx(Value_P B, Axis x)
+eval_ident_Bx(Value_P B, sAxis x)
 {
-  return Token(TOK_APL_VALUE1, Str0_0 (LOC));
+  fprintf (stderr, "eval_ident_B\n");
+  return Token(TOK_APL_VALUE1, Str0(LOC));
 }
 
 
@@ -1162,14 +1165,22 @@ get_function_mux(const char * function_name)
     menu_handle = dlopen ("/usr/local/lib/apl/libaplplot_menu.so", RTLD_NOW);
     aplplot_menu = (aplplot_menu_t)dlsym (menu_handle, "aplplot_menu");
   }
-  if (!strcmp(function_name, "get_signature"))   return (void *)&get_signature;
-  if (!strcmp(function_name, "eval_B"))          return (void *)&eval_B;
-  if (!strcmp(function_name, "eval_AB"))         return (void *)&eval_AB;
-  if (!strcmp(function_name, "eval_XB"))         return (void *)&eval_XB;
-  if (!strcmp(function_name, "eval_AXB"))        return (void *)&eval_AXB;
-  if (!strcmp(function_name, "eval_fill_B"))     return (void *)&eval_fill_B;
-  if (!strcmp(function_name, "eval_fill_AB"))    return (void *)&eval_fill_AB;
-  if (!strcmp(function_name, "eval_ident_Bx"))   return (void *)&eval_ident_Bx;
+  if (!strcmp(function_name, "get_signature"))
+    return reinterpret_cast<void *>(&get_signature);
+  if (!strcmp(function_name, "eval_B"))
+    return reinterpret_cast<void *>(&eval_B);
+  if (!strcmp(function_name, "eval_AB"))
+    return reinterpret_cast<void *>(&eval_AB);
+  if (!strcmp(function_name, "eval_XB"))
+    return reinterpret_cast<void *>(&eval_XB);
+  if (!strcmp(function_name, "eval_AXB"))
+    return reinterpret_cast<void *>(&eval_AXB);
+  if (!strcmp(function_name, "eval_fill_B"))
+    return reinterpret_cast<void *>(&eval_fill_B);
+  if (!strcmp(function_name, "eval_fill_AB"))
+    return reinterpret_cast<void *>(&eval_fill_AB);
+  if (!strcmp(function_name, "eval_ident_Bx"))
+    return reinterpret_cast<void *>(&eval_ident_Bx);
   return 0;
 }
 

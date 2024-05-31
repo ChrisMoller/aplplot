@@ -56,7 +56,7 @@ AC_CHECK_FILE([/usr/include/boost/spirit/include/qi.hpp], ,
   echo ">>>> You need to install the boost packages. <<<<";
   echo ""; exit])
 
-PKG_CHECK_MODULES([PLPLOT], [plplot >= 5.9.9], ,
+PKG_CHECK_MODULES([PLPLOT], [plplot >= 5.15.0], ,
   [echo "";
   echo ">>>> You need to install the plplot and plplot-devel packages. <<<<";
   echo ""; exit])
