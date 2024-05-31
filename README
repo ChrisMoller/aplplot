@@ -110,10 +110,6 @@ Options may be passed to the functions using a left argument:
 		 	argument of those pids, the function kills those
 			processes and closes the display windows.
 
-		* 'embed <state>' If the <state> is "on" or omitted, embed
-		        plots in the transcript.  If the state is "off,"
-			display plots normally.
-
 		* 'draw <option>'  Sets the drawing mode to lines, points,
 		  	or both, depending on the initial letter, 'l', 'p',
 			'b', upper or lower case, of the argument.  If the

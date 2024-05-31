@@ -1042,7 +1042,7 @@ eval_B(Value_P B)
 	delete [] zvec;
       }  
       else {	// don't know yet
-	// rank error?
+	RANK_ERROR;
       }
     } else {			// real nrs
       if (killem) {
@@ -1067,11 +1067,13 @@ eval_B(Value_P B)
 	if (B->get_cols() >= 2) pid = plot_xy (xcol, B);
 	break;
       default:			// multi dimensional 
+	RANK_ERROR;
 	break;
       }
     }
   }
   else {
+    DOMAIN_ERROR;
     // non numeric error
   }
 
@@ -1153,7 +1155,6 @@ eval_fill_AB(Value_P A, Value_P B)
 static Token
 eval_ident_Bx(Value_P B, sAxis x)
 {
-  fprintf (stderr, "eval_ident_B\n");
   return Token(TOK_APL_VALUE1, Str0(LOC));
 }
 
