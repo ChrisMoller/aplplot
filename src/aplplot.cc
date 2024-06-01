@@ -384,6 +384,10 @@ static void set_draw (int arg) {
       case 'B':
 	draw = APL_DRAW_BOTH;
 	break;
+      case 's':
+      case 'S':
+	draw = APL_DRAW_SCATTER;
+	break;
       default:
 	cerr << "Unrecognised draw option " << args[0] << endl;
 	break;
@@ -709,28 +713,52 @@ render_xy (APL_Float min_xv,
 	   APL_Float max_yv,
 	   vector<LineClass *> lines)
 {
+  fprintf (stderr, "render xy %g %g %g %g\n",
+	   min_xv, max_xv, min_yv, max_yv);
   plspage (0.0,  0.0, plot_width, plot_height, 0.0, 0.0);
   plscolbg (bgred, bggreen, bgblue);
   plinit ();
 
-  int axis_val = (mode == APL_MODE_XY) 
-    ? ((xlog ? 10 : 0) + (ylog ? 20 : 0)) : -2;
-  plenv (min_xv, max_xv, min_yv, max_yv, 0, axis_val);
-  if (mode != APL_MODE_XY) draw_polar_grid (min_xv, max_xv, min_yv, max_yv);
+  if ((draw & APL_DRAW_LINES) || (draw & APL_DRAW_POINTS)) {
 
-  pllab (xlabel.empty () ? "" : xlabel.c_str (),
-	 ylabel.empty () ? "" : ylabel.c_str (),
-	 tlabel.empty () ? "" : tlabel.c_str ());
+    int axis_val = (mode == APL_MODE_XY) 
+      ? ((xlog ? 10 : 0) + (ylog ? 20 : 0)) : -2;
+    plenv (min_xv, max_xv, min_yv, max_yv, 0, axis_val);
+    if (mode != APL_MODE_XY) draw_polar_grid (min_xv, max_xv, min_yv, max_yv);
 
-  plssym (0.0, 0.75);
-  for (int i = 0; i < lines.size (); i++) {
-    plcol0 (2 + i % 14);
-    if (draw & APL_DRAW_LINES)
-      plline (lines[i]->count, lines[i]->xvec, lines[i]->yvec);
-    if (draw & APL_DRAW_POINTS)
-      plpoin (lines[i]->count, lines[i]->xvec, lines[i]->yvec, 2 + i % 30);
+    for (int i = 0; i < lines.size (); i++) {
+      plcol0 (2 + i % 14);
+      if (draw & APL_DRAW_LINES)
+	plline (lines[i]->count, lines[i]->xvec, lines[i]->yvec);
+      if (draw & APL_DRAW_POINTS)
+	plpoin (lines[i]->count, lines[i]->xvec, lines[i]->yvec, 2 + i % 30);
+    }
+    plcol0 (1);
   }
-  plcol0 (1);
+  else if (draw & draw & APL_DRAW_SCATTER) {
+    APL_Float amin_xv =  MAXDOUBLE;
+    APL_Float amax_xv = -MAXDOUBLE;
+    APL_Float amin_yv =  MAXDOUBLE;
+    APL_Float amax_yv = -MAXDOUBLE;
+
+    for (int i = 0; i < lines[0]->count; i++) {
+      double xv =  lines[0]->yvec[i];
+      double yv =  lines[1]->yvec[i];
+	
+      if (amin_xv > xv) amin_xv = xv;
+      if (amax_xv < xv) amax_xv = xv;
+      if (amin_yv > yv) amin_yv = yv;
+      if (amax_yv < yv) amax_yv = yv;
+    }
+    
+    plenv (amin_xv, amax_xv, amin_yv, amax_yv, 0, 2);
+    pllab (xlabel.empty () ? "" : xlabel.c_str (),
+	   ylabel.empty () ? "" : ylabel.c_str (),
+	   tlabel.empty () ? "" : tlabel.c_str ());
+    plssym (0.0, 0.75);
+    
+    plpoin (lines[0]->count, lines[0]->yvec, lines[1]->yvec, 2);
+  }
 }
 
 static int
