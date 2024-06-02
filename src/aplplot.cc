@@ -647,19 +647,6 @@ open_file (char **tfile_p)
   return rf;
 }
 
-#if OLD_STYLE
-static int
-run_plot_z (PLINT count,
-	    APL_Float min_xv,
-	    APL_Float max_xv,
-	    APL_Float min_yv,
-	    APL_Float max_yv,
-	    APL_Float min_zv,
-	    APL_Float max_zv,
-	    PLFLT *xvec,
-	    PLFLT *yvec,
-	    PLFLT *zvec)
-#else
 static int
 run_plot_z (vector<PLFLT> rvec,
 	    vector<PLFLT> ivec,
@@ -668,7 +655,6 @@ run_plot_z (vector<PLFLT> rvec,
 	    APL_Float max_rv,
 	    APL_Float min_iv,
 	    APL_Float max_iv)
-#endif
 {
   plspage (0.0,  0.0, plot_width, plot_height, 0.0, 0.0);
   plsdev (mode_strings[target_idx].target);
@@ -676,17 +662,10 @@ run_plot_z (vector<PLFLT> rvec,
     pid_t pid = fork ();
     if (pid == 0) {		// child
       setsid ();
-#if OLD_STYLE
-      render_z (count,
-		min_xv, max_xv,
-		min_yv, max_yv,
-		min_zv, max_zv,
-		xvec, yvec, zvec);
-#else
+
       render_z (rvec, ivec, nvec,
 		min_rv, max_rv,
 		min_iv, max_iv);
-#endif
 
       plend ();
       wait (NULL);
@@ -694,18 +673,16 @@ run_plot_z (vector<PLFLT> rvec,
     }
     return (int)pid;
   }
-  else {
-#if OLD_STYLE
+  else {		// to file
     char *tfile = NULL;
     FILE *po = open_file (&tfile);
 
     if (po) {
       plsfile (po);
-      render_z (count,
-		min_xv, max_xv,
-		min_yv, max_yv,
-		min_zv, max_zv,
-		xvec, yvec, zvec);
+      render_z (rvec, ivec, nvec,
+		min_rv, max_rv,
+		min_iv, max_iv);
+
       plend ();
       if (embed) {
 	write (plot_pipe_fd, tfile, strlen (tfile));
@@ -715,7 +692,6 @@ run_plot_z (vector<PLFLT> rvec,
       if (tfile) free (tfile);
     }
     else UERR << "output file could not be opened.\n";
-#endif
     return 0;
   }
 }
@@ -1093,20 +1069,7 @@ eval_B(Value_P B)
   if (!(celltype & ~CT_NUMERIC)) {
     if (celltype &  CT_COMPLEX) {
       if (rank == 1) {  // simple polar graph
-#ifdef OLD_STYLE
-	APL_Float xv, yv, zv;
-	
-	APL_Float min_xv =  MAXDOUBLE;
-	APL_Float max_xv = -MAXDOUBLE;
-	APL_Float min_yv =  MAXDOUBLE;
-	APL_Float max_yv = -MAXDOUBLE;
-	APL_Float min_zv =  MAXDOUBLE;
-	APL_Float max_zv = -MAXDOUBLE;
 
-	PLFLT *xvec = new PLFLT[count];
-	PLFLT *yvec = new PLFLT[count];
-	PLFLT *zvec = new PLFLT[count];
-#else
 	APL_Float rv, iv;
 	APL_Float min_rv =  MAXDOUBLE;
 	APL_Float max_rv = -MAXDOUBLE;
@@ -1115,54 +1078,23 @@ eval_B(Value_P B)
 	vector<PLFLT> rvec (count);
 	vector<PLFLT> ivec (count);
 	vector<PLFLT> nvec (count);
-#endif
 	
 	loop(p, count) {
 	  const Cell & cell_B = B->get_cravel(p);
-#ifdef OLD_STYLE
-	  xv = (APL_Float)p;
-#endif
 	  rv = rvec[p] = (PLFLT)(cell_B.get_real_value ());
 	  iv = ivec[p] = (PLFLT)(cell_B.get_imag_value ());
 	  nvec[p] = (PLFLT)p;
 
-#ifdef OLD_STYLE
-	  if (min_xv > xv) min_xv = xv;
-	  if (max_xv < xv) max_xv = xv;
-	  if (min_yv > yv) min_yv = yv;
-	  if (max_yv < yv) max_yv = yv;
-	  if (min_zv > zv) min_zv = zv;
-	  if (max_zv < zv) max_zv = zv;
-	  
-	  xvec[p] = xv;
-	  yvec[p] = yv;
-	  zvec[p] = zv;
-#else
 	  if (min_rv > rv) min_rv = rv;
 	  if (max_rv < rv) max_rv = rv;
 	  if (min_iv > iv) min_iv = iv;
 	  if (max_iv < iv) max_iv = iv;
-#endif
 	}
 
-	
-#ifdef OLD_STYLE
-	pid = run_plot_z ((PLINT)count,
-			  min_xv, max_xv,
-			  min_yv, max_yv,
-			  min_zv, max_zv,
-			  xvec, yvec, zvec);
-#else
 	pid = run_plot_z (rvec, ivec, nvec,
 			  min_rv, max_rv,
 			  min_iv, max_iv);
-#endif
 
-#ifdef OLD_STYLE
-	delete [] xvec;
-	delete [] yvec;
-	delete [] zvec;
-#endif
       }  
       else {	// don't know yet
 	RANK_ERROR;
