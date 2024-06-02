@@ -25,9 +25,12 @@
 #include <iostream>
 #include <string>
 #include <cstring> 
+#include <complex> 
+#include <vector> 
 
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <alloca.h>
 #include <math.h>
 #include <signal.h>
 #include <values.h>
@@ -129,8 +132,8 @@ verify_filename ()
     }
   }
   if (target_idx == DEF_SCREEN) {
-    cerr << "Unsupported file extension: " << filename << endl;
-    cerr << "Redirecting to the screen.\n";
+    UERR << "Unsupported file extension: " << filename << endl;
+    UERR << "Redirecting to the screen.\n";
   }
 }
     
@@ -361,7 +364,7 @@ static void set_angle (int arg) {
 	angle_units = APL_ANGLE_PI_RADIANS;
 	break;
       default:
-	cerr << "Unrecognised angle unit " << args[0] << endl;
+	UERR << "Unrecognised angle unit " << args[0] << endl;
 	break;
       }
     } else angle_units = APL_ANGLE_RADIANS;
@@ -389,7 +392,7 @@ static void set_draw (int arg) {
 	draw = APL_DRAW_SCATTER;
 	break;
       default:
-	cerr << "Unrecognised draw option " << args[0] << endl;
+	UERR << "Unrecognised draw option " << args[0] << endl;
 	break;
       }
     } else draw = APL_DRAW_LINES;
@@ -423,9 +426,9 @@ static void set_dest (int arg) {
       }
     }
     if (i == MODES_MAX_ENTRY) {
-      cerr << "option must be one of screen, png, pdf, svg\n";
-      cerr << "eps, or ps.\n";
-      cerr << "Setting destination to screen\n";
+      UERR << "option must be one of screen, png, pdf, svg\n";
+      UERR << "eps, or ps.\n";
+      UERR << "Setting destination to screen\n";
       target_idx = DEF_SCREEN;
     }
   }
@@ -513,15 +516,18 @@ kwd_s kwds[] = {
 
 class LineClass {
 public:
-  LineClass (PLINT c, PLFLT *x,  PLFLT *y) {
-    count = c; xvec = x; yvec = y;
+  LineClass (PLINT c, bool cpx) {
+    points.reserve (c);
+    is_cpx = cpx;
   }
-  ~LineClass () { delete [] xvec; delete [] yvec; }
-  PLINT count;
-  PLFLT *xvec;
-  PLFLT *yvec;
+  ~LineClass () {  }
+  vector<complex<PLFLT>> points;
+  bool is_cpx = false;
 };
 
+// plot *0j.1×○⍳700
+
+#if 0
 static void
 render_z (PLINT count,
 	  APL_Float min_xv,
@@ -533,6 +539,16 @@ render_z (PLINT count,
 	  PLFLT *xvec,		// fixme switch to class
 	  PLFLT *yvec,
 	  PLFLT *zvec)
+#else
+static void
+render_z (vector<PLFLT> rvec,
+	  vector<PLFLT> ivec,
+	  vector<PLFLT> nvec,
+	  APL_Float min_rv,
+	  APL_Float max_rv,
+	  APL_Float min_iv,
+	  APL_Float max_iv)
+#endif
 {
 
     /*
@@ -559,7 +575,8 @@ render_z (PLINT count,
   pllab (xlabel.empty () ? "" : xlabel.c_str (),
 	 ylabel.empty () ? "" : ylabel.c_str (),
 	 tlabel.empty () ? "" : tlabel.c_str ());
-    
+
+#if 0
   plw3d (512.0,	// basex,
 	 512.0,	// basey,
 	 512.0,	// height,
@@ -571,6 +588,26 @@ render_z (PLINT count,
 	 max_zv,	// zmax,
 	 20.0,	// alt,
 	 -30.0);	// az: pos cw from top, neg ccw from top
+#else
+  fprintf (stderr, "%g %g\n%g %g\n%g %g\n",
+	 min_rv,	// xmin,
+	 max_rv,	// xmax,
+	 min_iv,	// ymin,
+	 max_iv,	// ymax,
+	 0.0,	// zmin,
+	 nvec.back ());	// zmax,
+  plw3d (512.0,	// basex,
+	 512.0,	// basey,
+	 512.0,	// height,
+	 min_rv,	// xmin,
+	 max_rv,	// xmax,
+	 min_iv,	// ymin,
+	 max_iv,	// ymax,
+	 0.0,	// zmin,
+	 nvec.back (),	// zmax,
+	 20.0,	// alt,
+	 -30.0);	// az: pos cw from top, neg ccw from top
+#endif
 
   plbox3 ("bnstu",	// xopt,
 	  "x label",	// xlabel,	
@@ -585,7 +622,7 @@ render_z (PLINT count,
 	  0.0,	// xtick,
 	  0);		// nxsub
 
-  plline3 (count, xvec, yvec, zvec);
+  plline3 (nvec.size (), rvec.data (), ivec.data (), nvec.data ());
 }
 
 static FILE *
@@ -605,11 +642,12 @@ open_file (char **tfile_p)
   }
   else {
     if (!filename.empty ()) rf = fopen (filename.c_str (), "w");
-    else cerr << "missing filename\n";
+    else UERR << "missing filename\n";
   }
   return rf;
 }
 
+#if OLD_STYLE
 static int
 run_plot_z (PLINT count,
 	    APL_Float min_xv,
@@ -621,6 +659,16 @@ run_plot_z (PLINT count,
 	    PLFLT *xvec,
 	    PLFLT *yvec,
 	    PLFLT *zvec)
+#else
+static int
+run_plot_z (vector<PLFLT> rvec,
+	    vector<PLFLT> ivec,
+	    vector<PLFLT> nvec,
+	    APL_Float min_rv,
+	    APL_Float max_rv,
+	    APL_Float min_iv,
+	    APL_Float max_iv)
+#endif
 {
   plspage (0.0,  0.0, plot_width, plot_height, 0.0, 0.0);
   plsdev (mode_strings[target_idx].target);
@@ -628,12 +676,17 @@ run_plot_z (PLINT count,
     pid_t pid = fork ();
     if (pid == 0) {		// child
       setsid ();
-    
+#if OLD_STYLE
       render_z (count,
 		min_xv, max_xv,
 		min_yv, max_yv,
 		min_zv, max_zv,
 		xvec, yvec, zvec);
+#else
+      render_z (rvec, ivec, nvec,
+		min_rv, max_rv,
+		min_iv, max_iv);
+#endif
 
       plend ();
       wait (NULL);
@@ -642,6 +695,7 @@ run_plot_z (PLINT count,
     return (int)pid;
   }
   else {
+#if OLD_STYLE
     char *tfile = NULL;
     FILE *po = open_file (&tfile);
 
@@ -660,7 +714,8 @@ run_plot_z (PLINT count,
       }
       if (tfile) free (tfile);
     }
-    else cerr << "output file could not be opened.\n";
+    else UERR << "output file could not be opened.\n";
+#endif
     return 0;
   }
 }
@@ -713,6 +768,7 @@ render_xy (APL_Float min_xv,
 	   APL_Float max_yv,
 	   vector<LineClass *> lines)
 {
+#if 0
   fprintf (stderr, "render xy %g %g %g %g\n",
 	   min_xv, max_xv, min_yv, max_yv);
   plspage (0.0,  0.0, plot_width, plot_height, 0.0, 0.0);
@@ -741,24 +797,31 @@ render_xy (APL_Float min_xv,
     APL_Float amin_yv =  MAXDOUBLE;
     APL_Float amax_yv = -MAXDOUBLE;
 
-    for (int i = 0; i < lines[0]->count; i++) {
-      double xv =  lines[0]->yvec[i];
-      double yv =  lines[1]->yvec[i];
+    fprintf (stderr, "ls = %d\n", lines.size ());
+    if (lines.size () >= 2) {
+      for (int i = 0; i < lines[0]->count; i++) {
+	double xv =  lines[0]->yvec[i];
+	double yv =  lines[1]->yvec[i];
 	
-      if (amin_xv > xv) amin_xv = xv;
-      if (amax_xv < xv) amax_xv = xv;
-      if (amin_yv > yv) amin_yv = yv;
-      if (amax_yv < yv) amax_yv = yv;
+	if (amin_xv > xv) amin_xv = xv;
+	if (amax_xv < xv) amax_xv = xv;
+	if (amin_yv > yv) amin_yv = yv;
+	if (amax_yv < yv) amax_yv = yv;
+      }
+    
+      plenv (amin_xv, amax_xv, amin_yv, amax_yv, 0, 2);
+      pllab (xlabel.empty () ? "" : xlabel.c_str (),
+	     ylabel.empty () ? "" : ylabel.c_str (),
+	     tlabel.empty () ? "" : tlabel.c_str ());
+      plssym (0.0, 0.75);
+    
+      plpoin (lines[0]->count, lines[0]->yvec, lines[1]->yvec, 2);
     }
-    
-    plenv (amin_xv, amax_xv, amin_yv, amax_yv, 0, 2);
-    pllab (xlabel.empty () ? "" : xlabel.c_str (),
-	   ylabel.empty () ? "" : ylabel.c_str (),
-	   tlabel.empty () ? "" : tlabel.c_str ());
-    plssym (0.0, 0.75);
-    
-    plpoin (lines[0]->count, lines[0]->yvec, lines[1]->yvec, 2);
+      //    else {
+      //      UERR << "Not enough information.\n";
+      //    }
   }
+#endif
 }
 
 static int
@@ -856,6 +919,7 @@ static int
 plot_xy (ShapeItem pxcol, Value_P B)
 {
   int pid = -1;
+#if 0
   APL_Float xv, yv;
   vector<LineClass *> lines;
 
@@ -908,7 +972,7 @@ plot_xy (ShapeItem pxcol, Value_P B)
   
   for (int i = 0; i < lines.size (); i++)
     delete lines[i];
-  
+#endif
   return pid;
 }
 
@@ -916,6 +980,7 @@ static int
 plot_y (Value_P B)
 {
   int pid = -1;
+#if 0
   APL_Float xv, yv;
   vector<LineClass *> lines;
 	
@@ -951,7 +1016,7 @@ plot_y (Value_P B)
   pid = run_plot (min_xv, max_xv, min_yv, max_yv, lines);
   
   delete line;
-  
+#endif
   return pid;
 }
 
@@ -970,7 +1035,7 @@ handle_opts ()
     if (idx >= 0) (*opt_fcn (idx))(opt_arg (idx));
   }
   else {
-    cerr << "invalid option " << keyword << endl;
+    UERR << "invalid option " << keyword << endl;
     // fixme -- complain abt bad kwd
   }
   
@@ -1028,6 +1093,7 @@ eval_B(Value_P B)
   if (!(celltype & ~CT_NUMERIC)) {
     if (celltype &  CT_COMPLEX) {
       if (rank == 1) {  // simple polar graph
+#ifdef OLD_STYLE
 	APL_Float xv, yv, zv;
 	
 	APL_Float min_xv =  MAXDOUBLE;
@@ -1036,17 +1102,31 @@ eval_B(Value_P B)
 	APL_Float max_yv = -MAXDOUBLE;
 	APL_Float min_zv =  MAXDOUBLE;
 	APL_Float max_zv = -MAXDOUBLE;
-	
+
 	PLFLT *xvec = new PLFLT[count];
 	PLFLT *yvec = new PLFLT[count];
 	PLFLT *zvec = new PLFLT[count];
+#else
+	APL_Float rv, iv;
+	APL_Float min_rv =  MAXDOUBLE;
+	APL_Float max_rv = -MAXDOUBLE;
+	APL_Float min_iv =  MAXDOUBLE;
+	APL_Float max_iv = -MAXDOUBLE;
+	vector<PLFLT> rvec (count);
+	vector<PLFLT> ivec (count);
+	vector<PLFLT> nvec (count);
+#endif
 	
 	loop(p, count) {
 	  const Cell & cell_B = B->get_cravel(p);
+#ifdef OLD_STYLE
 	  xv = (APL_Float)p;
-	  yv = cell_B.get_real_value ();
-	  zv = cell_B.get_imag_value ();
+#endif
+	  rv = rvec[p] = (PLFLT)(cell_B.get_real_value ());
+	  iv = ivec[p] = (PLFLT)(cell_B.get_imag_value ());
+	  nvec[p] = (PLFLT)p;
 
+#ifdef OLD_STYLE
 	  if (min_xv > xv) min_xv = xv;
 	  if (max_xv < xv) max_xv = xv;
 	  if (min_yv > yv) min_yv = yv;
@@ -1057,17 +1137,32 @@ eval_B(Value_P B)
 	  xvec[p] = xv;
 	  yvec[p] = yv;
 	  zvec[p] = zv;
+#else
+	  if (min_rv > rv) min_rv = rv;
+	  if (max_rv < rv) max_rv = rv;
+	  if (min_iv > iv) min_iv = iv;
+	  if (max_iv < iv) max_iv = iv;
+#endif
 	}
 
+	
+#ifdef OLD_STYLE
 	pid = run_plot_z ((PLINT)count,
 			  min_xv, max_xv,
 			  min_yv, max_yv,
 			  min_zv, max_zv,
 			  xvec, yvec, zvec);
+#else
+	pid = run_plot_z (rvec, ivec, nvec,
+			  min_rv, max_rv,
+			  min_iv, max_iv);
+#endif
 
+#ifdef OLD_STYLE
 	delete [] xvec;
 	delete [] yvec;
 	delete [] zvec;
+#endif
       }  
       else {	// don't know yet
 	RANK_ERROR;
@@ -1100,12 +1195,16 @@ eval_B(Value_P B)
       }
     }
   }
+  else if (B->is_char_string()) {
+    fprintf (stderr, "GGGGGGGGGGGGGGGG\n");
+    return Token(TOK_APL_VALUE1, Str0_0 (LOC));
+  }
   else {
     DOMAIN_ERROR;
     // non numeric error
   }
 
-  return Token(TOK_APL_VALUE1, IntScalar (pid, LOC));
+  return Token(TOK_APL_VALUE1, Str0_0 (LOC));
 }
 
 

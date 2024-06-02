@@ -52,6 +52,7 @@ static GtkWidget *xlog;
 static GtkWidget *ylog;
 static GtkWidget *lines;
 static GtkWidget *points;
+static GtkWidget *scatter;
 static GtkAdjustment *origin_x_adj;
 static GtkAdjustment *span_x_adj;
 static GtkWidget *embed;
@@ -177,9 +178,17 @@ hitit_clicked_cb (GtkButton *button,
   val.type = VALUE_DRAW;
   gboolean la = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (lines));
   gboolean pa = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (points));
+  gboolean sa = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (scatter));
   gint am = 0;
-  am |= la ? APL_DRAW_LINES : 0;
-  am |= pa ? APL_DRAW_POINTS : 0;
+  if (sa) {
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (lines), FALSE);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (points), FALSE);
+    am = APL_DRAW_SCATTER;
+  }
+  else {
+    am |= la ? APL_DRAW_LINES : 0;
+    am |= pa ? APL_DRAW_POINTS : 0;
+  }
   val.val.i =  am;
   aplplot_set_value (val);
 
@@ -356,8 +365,9 @@ activate (GtkApplication* app,
       GtkWidget *vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 4);
       gtk_box_pack_start (GTK_BOX (hbox), vbox, FALSE, FALSE, 4);
 
-      lines  = gtk_check_button_new_with_label ("Lines");
-      points = gtk_check_button_new_with_label ("Points");
+      lines   = gtk_check_button_new_with_label ("Lines");
+      points  = gtk_check_button_new_with_label ("Points");
+      scatter = gtk_check_button_new_with_label ("Scatter");
 
       int draw = get_int_from_value (VALUE_DRAW, APL_DRAW_LINES);
 
@@ -365,9 +375,12 @@ activate (GtkApplication* app,
 				    draw & APL_DRAW_LINES);
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (points),
 				    draw & APL_DRAW_POINTS);
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (scatter),
+				    draw & APL_DRAW_SCATTER);
       
       gtk_box_pack_start (GTK_BOX (vbox), lines, FALSE, FALSE, 4);
       gtk_box_pack_start (GTK_BOX (vbox), points, FALSE, FALSE, 4);
+      gtk_box_pack_start (GTK_BOX (vbox), scatter, FALSE, FALSE, 4);
     }
 
     gboolean polar_active = TRUE;
