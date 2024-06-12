@@ -9,6 +9,9 @@ typedef struct {
   const char *target;
   const char *ext;
   } mode_strings_s;
+#ifndef DO_INIT
+extern
+#endif
 mode_strings_s mode_strings[MODES_MAX_ENTRY]
 #ifdef DO_INIT
 = {

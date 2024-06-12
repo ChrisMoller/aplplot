@@ -80,7 +80,7 @@ static Token eval_ident_Bx(Value_P B, sAxis x);
 
 Fun_signature get_signature() { return SIG_Z_A_F2_B; }
 
-static Token eval_B(Value_P B);
+Token eval_B(Value_P B);
 static Token eval_AB(Value_P A, Value_P B);
 static Token eval_XB(Value_P X, Value_P B);
 static Token eval_AXB(Value_P A, Value_P X, Value_P B);

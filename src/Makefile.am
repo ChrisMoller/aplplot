@@ -3,12 +3,12 @@ lib_LTLIBRARIES = libaplplot_menu.la libaplplot.la
 
 
 libaplplot_menu_la_SOURCES = aplplot_menu.c aplplot_menu.h
-libaplplot_la_SOURCES = aplplot.cc aplplot.hh
+libaplplot_la_SOURCES = parser.cc aplplot.cc aplplot.hh
 
 BUILT_SOURCES = modes.h
 
-#EXTRA_libaplplot_menu_la_DEPENDENCIES = modes.h
-#EXTRA_libaplplot_la_DEPENDENCIES = modes.h
+EXTRA_libaplplot_menu_la_DEPENDENCIES = modes.h
+EXTRA_libaplplot_la_DEPENDENCIES = modes.h
 
 
 libaplplot_menu_la_CFLAGS = $(GTK_CFLAGS) $(CAIRO_CFLAGS)

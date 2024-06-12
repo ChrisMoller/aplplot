@@ -20,11 +20,13 @@
 #define cfg_ASSERT_LEVEL_WANTED 0
 #define cfg_SHORT_VALUE_LENGTH_WANTED 1
 
+#ifdef PARSER
 #include <boost/spirit/include/qi.hpp>
 #include <boost/unordered_map.hpp>
-#include <iostream>
-#include <string>
-#include <cstring> 
+#endif
+//#include <iostream>
+//#include <string>
+//#include <cstring> 
 #include <complex> 
 #include <vector> 
 
@@ -39,13 +41,60 @@
 #include <plplot/plplot.h>
 
 #define DO_INIT
+#include "parser.hh"
+#define DO_INIT
 #include "modes.h"
 #include "aplplot.hh"
 #include "aplplot_menu.h"
 
 using namespace std;
+#ifdef PARSER
 namespace qi = boost::spirit::qi;
 namespace ascii = boost::spirit::ascii;
+#endif
+
+class ComplexVec
+{
+public:
+  ComplexVec (vector<PLFLT> rv, vector<PLFLT> iv)
+  {
+    rvec = rv;
+    ivec = iv;
+  }
+  vector<PLFLT> rvec;
+  vector<PLFLT> ivec;
+};
+
+class ComplexVecVec
+{
+public:
+  ComplexVecVec (vector<PLFLT> nv,
+		 APL_Float min_r,
+		 APL_Float max_r,
+		 APL_Float min_i,
+		 APL_Float max_i)
+  {
+    nvec = nv;
+    min_rv = min_r;
+    max_rv = max_r;
+    min_iv = min_i;
+    max_iv = max_i;
+  }
+  void push (vector<PLFLT> rvec, vector<PLFLT> ivec)
+  {
+    fprintf (stderr, "pushing %d %d\n",
+	     (int)(rvec.size ()),
+	     (int)(ivec.size ()));
+    ComplexVec cv (rvec, ivec);
+    cvec.push_back (cv);
+  }
+  vector<PLFLT> nvec;
+  vector<ComplexVec> cvec;
+  APL_Float min_rv;
+  APL_Float max_rv;
+  APL_Float min_iv;
+  APL_Float max_iv;
+};
 
 #undef PACKAGE
 #undef PACKAGE_BUGREPORT
@@ -56,6 +105,9 @@ namespace ascii = boost::spirit::ascii;
 #undef PACKAGE_VERSION
 #undef VERSION
 
+Value_P global_B;
+
+#ifdef PARSER
 static int 	plot_width	= DEFAULT_PLOT_WIDTH;
 static int	plot_height	= DEFAULT_PLOT_HEIGHT;
 static string	xlabel;
@@ -75,9 +127,8 @@ static int	target_idx	= DEF_SCREEN;
 static unsigned char bgred = 0, bggreen = 0, bgblue = 0;
 static double	xorigin		= 0.0;
 static double	xspan		= -1.0;
-static int      plot_pipe_fd = -1;
-
-Value_P global_B;
+static int      plot_pipe_fd 	= -1;
+static int      axis 		= -1;	// fixme add to menu
 
 string keyword;
 vector<string> args;
@@ -88,8 +139,8 @@ aplplot_menu_t aplplot_menu = NULL;
 typedef boost::unordered_map<std::string, int> si_map;
 si_map  kwd_map;
 
-typedef void (*option_fcn)(int);
-typedef struct { std::string kwdx; option_fcn fcnx; int argx;} kwd_s;
+//typedef void (*option_fcn)(int);
+//typedef struct { std::string kwdx; option_fcn fcnx; int argx;} kwd_s;
 #define opt_kwd(i) kwds[i].kwdx
 #define opt_fcn(i) kwds[i].fcnx
 #define opt_arg(i) kwds[i].argx
@@ -323,7 +374,6 @@ static void set_embed (int arg) {
   if (embed) target_idx = DEF_PNG;
 }
 
-
 static void set_menu (int arg) {
   if (aplplot_menu) {
     (*aplplot_menu) ((void *)aplplot_set_value, (void *)aplplot_get_value);
@@ -398,7 +448,6 @@ static void set_draw (int arg) {
     } else draw = APL_DRAW_LINES;
   } else draw = arg;
 }
-
 
 static void set_xcol (int arg) {
   if (args.size () >= 1) istringstream (args[0]) >> xcol;
@@ -513,34 +562,25 @@ kwd_s kwds[] = {
   {"background",	set_background,	APL_BG_SET},
   {"bg",		set_background,	APL_BG_SET}
 };
+#endif
 
+#if 0
 class LineClass {
 public:
-  LineClass (PLINT c, bool cpx) {
-    points.reserve (c);
-    is_cpx = cpx;
+  LineClass (PLINT c, PLFLT *x,  PLFLT *y) {
+    count = c; xvec = x; yvec = y;
   }
-  ~LineClass () {  }
-  vector<complex<PLFLT>> points;
-  bool is_cpx = false;
+  ~LineClass () { delete [] xvec; delete [] yvec; }
+  PLINT count;
+  PLFLT *xvec;
+  PLFLT *yvec;
 };
+#endif
 
 // plot *0j.1×○⍳700
 
-#if 0
 static void
-render_z (PLINT count,
-	  APL_Float min_xv,
-	  APL_Float max_xv,
-	  APL_Float min_yv,
-	  APL_Float max_yv,
-	  APL_Float min_zv,
-	  APL_Float max_zv,
-	  PLFLT *xvec,		// fixme switch to class
-	  PLFLT *yvec,
-	  PLFLT *zvec)
-#else
-static void
+#ifdef OLD_STYLE
 render_z (vector<PLFLT> rvec,
 	  vector<PLFLT> ivec,
 	  vector<PLFLT> nvec,
@@ -548,6 +588,8 @@ render_z (vector<PLFLT> rvec,
 	  APL_Float max_rv,
 	  APL_Float min_iv,
 	  APL_Float max_iv)
+#else
+render_z (ComplexVecVec cvv)
 #endif
 {
 
@@ -576,38 +618,17 @@ render_z (vector<PLFLT> rvec,
 	 ylabel.empty () ? "" : ylabel.c_str (),
 	 tlabel.empty () ? "" : tlabel.c_str ());
 
-#if 0
   plw3d (512.0,	// basex,
 	 512.0,	// basey,
 	 512.0,	// height,
-	 min_xv,	// xmin,
-	 max_xv,	// xmax,
-	 min_yv,	// ymin,
-	 max_yv,	// ymax,
-	 min_zv,	// zmin,
-	 max_zv,	// zmax,
+	 cvv.min_rv,	// xmin,
+	 cvv.max_rv,	// xmax,
+	 cvv.min_iv,	// ymin,
+	 cvv.max_iv,	// ymax,
+	 0.0,	// zmin,
+	 cvv.nvec.back (),	// zmax,
 	 20.0,	// alt,
 	 -30.0);	// az: pos cw from top, neg ccw from top
-#else
-  fprintf (stderr, "%g %g\n%g %g\n%g %g\n",
-	 min_rv,	// xmin,
-	 max_rv,	// xmax,
-	 min_iv,	// ymin,
-	 max_iv,	// ymax,
-	 0.0,	// zmin,
-	 nvec.back ());	// zmax,
-  plw3d (512.0,	// basex,
-	 512.0,	// basey,
-	 512.0,	// height,
-	 min_rv,	// xmin,
-	 max_rv,	// xmax,
-	 min_iv,	// ymin,
-	 max_iv,	// ymax,
-	 0.0,	// zmin,
-	 nvec.back (),	// zmax,
-	 20.0,	// alt,
-	 -30.0);	// az: pos cw from top, neg ccw from top
-#endif
 
   plbox3 ("bnstu",	// xopt,
 	  "x label",	// xlabel,	
@@ -622,7 +643,27 @@ render_z (vector<PLFLT> rvec,
 	  0.0,	// xtick,
 	  0);		// nxsub
 
+#ifdef OLD_STYLE
   plline3 (nvec.size (), rvec.data (), ivec.data (), nvec.data ());
+#else
+  fprintf (stderr, "ns = %d, cs = %d\n",
+	   (int)(cvv.nvec.size ()),
+	   (int)(cvv.cvec.size ())
+	   );
+  loop (c, cvv.cvec.size ()) {
+    ComplexVec vc = cvv.cvec[c];
+    fprintf (stderr, "cs = %d, rs is = %d %d\n",
+	     (int)cvv.cvec.size (),
+	     (int)(vc.rvec.size ()),
+	     (int)(vc.ivec.size ()));
+#if 1
+    plline3 (cvv.nvec.size (),
+	     vc.rvec.data (),
+	     vc.ivec.data (),
+	     cvv.nvec.data ());
+#endif
+  }
+#endif
 }
 
 static FILE *
@@ -648,6 +689,7 @@ open_file (char **tfile_p)
 }
 
 static int
+#ifdef OLD_STYLE
 run_plot_z (vector<PLFLT> rvec,
 	    vector<PLFLT> ivec,
 	    vector<PLFLT> nvec,
@@ -655,6 +697,9 @@ run_plot_z (vector<PLFLT> rvec,
 	    APL_Float max_rv,
 	    APL_Float min_iv,
 	    APL_Float max_iv)
+#else
+  run_plot_z (ComplexVecVec cvv)
+#endif
 {
   plspage (0.0,  0.0, plot_width, plot_height, 0.0, 0.0);
   plsdev (mode_strings[target_idx].target);
@@ -663,9 +708,13 @@ run_plot_z (vector<PLFLT> rvec,
     if (pid == 0) {		// child
       setsid ();
 
+#ifdef OLD_STYLE
       render_z (rvec, ivec, nvec,
 		min_rv, max_rv,
 		min_iv, max_iv);
+#else
+      render_z (cvv);
+#endif
 
       plend ();
       wait (NULL);
@@ -679,9 +728,14 @@ run_plot_z (vector<PLFLT> rvec,
 
     if (po) {
       plsfile (po);
+
+#ifdef OLD_STYLE
       render_z (rvec, ivec, nvec,
 		min_rv, max_rv,
 		min_iv, max_iv);
+#else
+      render_z (cvv);
+#endif
 
       plend ();
       if (embed) {
@@ -737,6 +791,7 @@ draw_polar_grid (APL_Float min_xv,
   plwidth (1.0);
 }
 
+#ifdef OLD_STYLE
 static void
 render_xy (APL_Float min_xv,
 	   APL_Float max_xv,
@@ -744,7 +799,6 @@ render_xy (APL_Float min_xv,
 	   APL_Float max_yv,
 	   vector<LineClass *> lines)
 {
-#if 0
   fprintf (stderr, "render xy %g %g %g %g\n",
 	   min_xv, max_xv, min_yv, max_yv);
   plspage (0.0,  0.0, plot_width, plot_height, 0.0, 0.0);
@@ -797,9 +851,10 @@ render_xy (APL_Float min_xv,
       //      UERR << "Not enough information.\n";
       //    }
   }
-#endif
 }
+#endif
 
+#ifdef OLD_STYLE
 static int
 run_plot (APL_Float min_xv,
 	  APL_Float max_xv,
@@ -838,6 +893,7 @@ run_plot (APL_Float min_xv,
     return 0;
   }
 }
+#endif
 
 static void
 killAllChildProcess(int ppid)
@@ -1002,7 +1058,7 @@ handle_opts ()
   if (keyword.empty ()) return;
 
   if (kwd_map.empty ())
-    for (int i = 0; i < sizeof (kwds) / sizeof (kwd_s); i++)
+    for (int i = 0; i < nr_kwds; i++)
       kwd_map [opt_kwd (i)] = i;
 
   if (kwd_map.find (keyword) != kwd_map.end ()) {
@@ -1058,9 +1114,14 @@ struct option_parser : qi::grammar<Iterator, ascii::space_type> {
 };
 
 static Token
-eval_B(Value_P B)
+eval_XB(Value_P X, Value_P B)
 {
   int pid = -1;
+
+  if (X->is_numeric_scalar()) {
+    int v = (int)(X->get_sole_integer ());
+    if (v != -2) axis = v;
+  }
   
   const ShapeItem count    = B->element_count();
   const auto      rank     = B->get_rank();
@@ -1068,13 +1129,14 @@ eval_B(Value_P B)
 
   if (!(celltype & ~CT_NUMERIC)) {
     if (celltype &  CT_COMPLEX) {
-      if (rank == 1) {  // simple polar graph
 
-	APL_Float rv, iv;
-	APL_Float min_rv =  MAXDOUBLE;
-	APL_Float max_rv = -MAXDOUBLE;
-	APL_Float min_iv =  MAXDOUBLE;
-	APL_Float max_iv = -MAXDOUBLE;
+      APL_Float rv, iv;
+      APL_Float min_rv =  MAXDOUBLE;
+      APL_Float max_rv = -MAXDOUBLE;
+      APL_Float min_iv =  MAXDOUBLE;
+      APL_Float max_iv = -MAXDOUBLE;
+
+      if (rank == 1) {  // complex vector: xy complex plane, z indep vbl
 	vector<PLFLT> rvec (count);
 	vector<PLFLT> ivec (count);
 	vector<PLFLT> nvec (count);
@@ -1091,13 +1153,57 @@ eval_B(Value_P B)
 	  if (max_iv < iv) max_iv = iv;
 	}
 
+#ifdef OLD_STYLE
 	pid = run_plot_z (rvec, ivec, nvec,
 			  min_rv, max_rv,
 			  min_iv, max_iv);
+#else
+	ComplexVecVec cvv (nvec,  min_rv, max_rv, min_iv, max_iv);
+	cvv.push (rvec, ivec);
+	pid = run_plot_z (cvv);
+#endif
 
       }  
-      else {	// don't know yet
-	RANK_ERROR;
+      else {	// complex matrix: n vectors as abov
+	ShapeItem rows = B->get_rows();
+	ShapeItem cols = B->get_cols();
+
+	vector<PLFLT> rvec (cols);
+	vector<PLFLT> ivec (cols);
+	vector<PLFLT> nvec (cols);	
+
+	loop(p, count) {
+	  const Cell & cell_B = B->get_cravel(p);
+	  rv = (PLFLT)(cell_B.get_real_value ());
+	  iv = (PLFLT)(cell_B.get_imag_value ());
+	  if (min_rv > rv) min_rv = rv;
+	  if (max_rv < rv) max_rv = rv;
+	  if (min_iv > iv) min_iv = iv;
+	  if (max_iv < iv) max_iv = iv;
+	}
+
+	loop (c, cols)
+	  nvec[c] = (PLFLT)c;
+
+	loop (r, rows) {
+	  int p = r * (int)cols;
+	  loop (c, cols) {
+	    const Cell & cell_B = B->get_cravel(p + c);
+	    rvec[p] = (PLFLT)(cell_B.get_real_value ());
+	    ivec[p] = (PLFLT)(cell_B.get_imag_value ());
+	  }
+	  
+	  
+#ifdef OLD_STYLE
+	  pid = run_plot_z (rvec, ivec, nvec,
+			    min_rv, max_rv,
+			    min_iv, max_iv);
+#else
+	ComplexVecVec cvv (nvec,  min_rv, max_rv, min_iv, max_iv);
+	pid = run_plot_z (cvv);
+#endif
+	}
+	
       }
     } else {			// real nrs
       if (killem) {
@@ -1186,10 +1292,11 @@ eval_AB(Value_P A, Value_P B)
    return rt;
 }
 
-static Token
-eval_XB(Value_P X, Value_P B)
+Token
+eval_B(Value_P B)
 {
-  return Token(TOK_APL_VALUE1, Str0_0 (LOC));
+  Value_P X = IntScalar (-2, LOC);
+  return eval_XB (X, B);
 }
 
 static Token
