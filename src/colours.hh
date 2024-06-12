@@ -7,4 +7,5 @@ typedef struct {
   unsigned char blue;
 } colours_s;
 
-void colours_init ();
+colours_s *colour_lookup (const char *col);
+

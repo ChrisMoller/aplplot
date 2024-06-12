@@ -1,6 +1,7 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #include "colours.hh"
 
@@ -137,7 +138,7 @@ cols_find (const void *a, const void *b)
 {
   char *av = (char *)a;
   colours_s *bv = *(colours_s **)b;
-  return strcmp (av, bv->name);
+  return strcasecmp (av, bv->name);
 }
 
 static int
@@ -148,7 +149,7 @@ cols_cmp (const void *a, const void *b)
   return strcmp (av->name, bv->name);
 }
 
-void
+static void
 colours_init ()
 {
   cols = (colours_s **)malloc (colours_cnt * sizeof(colours_s *));
@@ -156,6 +157,19 @@ colours_init ()
   for (i = 0; i < colours_cnt; i++)
     cols[i] = &colours[i];
   qsort (cols, colours_cnt, sizeof(colours_s *), cols_cmp);
+}
+
+colours_s *
+colour_lookup (const char *col)
+{
+  if (!cols) colours_init ();
+
+  void *t = bsearch (col, cols, colours_cnt, sizeof(colours_s *), cols_find);
+  if (t)
+    return *(colours_s **)t;
+  else
+    return nullptr;
+  
 }
 
 #if 0
