@@ -502,7 +502,6 @@ enum {APL_BG_SET, APL_BG_BLACK, APL_BG_WHITE};
 
 static void set_background (int arg) {
   if (isalpha (*(args[0].c_str ()))) {
-    fprintf (stderr, "got alpha %s\n", args[0].c_str ());
     colours_s *fnd = colour_lookup (args[0].c_str ());
     if (fnd) {
       bgalpha = 0;

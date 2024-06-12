@@ -180,7 +180,6 @@ behind fillcolor rgb '0x%08x' fillstyle solid noborder\n"
 static void
 plot_simple_y (vector<double> *rvec, vector<double> *ivec, int extr)
 {
-  fprintf (stderr, "plot_simple_y\n");
   FILE *gp = open_pipe ();
 
   fprintf (gp, "$Mydata << EOD\n");
@@ -205,6 +204,13 @@ plot_simple_y (vector<double> *rvec, vector<double> *ivec, int extr)
   fprintf (gp, "EOD\n");
 
   fprintf (gp, GP_CLEAR, MKCOLOUR (bgalpha, bgred, bggreen, bgblue));
+  if (mode == APL_MODE_POLAR) {
+    fprintf (gp, "set size square\n");
+    fprintf (gp, "set polar\n");
+    fprintf (gp, "set grid polar\n");
+    fprintf (gp, "set angle %s\n",
+	     (mode == APL_ANGLE_DEGREES) ? "degrees" : "radians");
+  }
   fprintf (gp, "plot $Mydata with linespoints t \"whatever\"\n");
 
   fflush (gp);
