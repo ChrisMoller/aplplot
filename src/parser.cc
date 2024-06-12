@@ -63,6 +63,7 @@ double           xorigin	= 0.0;
 double           xspan		= -1.0;
 int              plot_pipe_fd 	= -1;
 int              axis 		= -1;	// fixme add to menu
+int		 extract	= APL_EXTRACT_REAL;
 
 //Value_P global_B;
 
@@ -91,6 +92,7 @@ static void reset_options (int arg) {
   xspan		= -1.0;
   embed		= false;
   menu		= false;
+  extract	= APL_EXTRACT_REAL;
 }
 
 
@@ -178,6 +180,10 @@ aplplot_get_value (int which)
     rc.type = which;
     rc.val.i = draw;
     break;
+  case VALUE_EXTRACT:
+    rc.type = which;
+    rc.val.i = extract;
+    break;
   case VALUE_COORDS:
     rc.type = which;
     rc.val.i = mode;
@@ -260,6 +266,10 @@ aplplot_set_value (value_u val)
     break;
   case VALUE_GO:
     eval_B (global_B);
+    break;
+  case VALUE_EXTRACT:
+    extract =  val.val.i;
+    break;
   default:		// do nothing
     break;
   }
@@ -349,8 +359,36 @@ static void set_angle (int arg) {
   } else angle_units = arg;
 }
 
+static void set_extract (int arg) {
+  if (arg == APL_EXTRACT_SET) {
+    if (args.size () >= 1) {
+      switch (*(args[0].c_str ())) {
+      case 'r':
+      case 'R':
+	extract = APL_EXTRACT_REAL;
+	break;
+      case 'i':
+      case 'I':
+	extract = APL_EXTRACT_IMAGINARY;
+	break;
+      case 'm':
+      case 'M':
+	extract = APL_EXTRACT_MAGNITUDE;
+	break;
+      case 'p':
+      case 'P':
+	extract = APL_EXTRACT_PHASE;
+	break;
+      default:
+	UERR << "Unrecognised extract option " << args[0] << endl;
+	break;
+      }
+    } else extract = APL_EXTRACT_REAL;
+  } else extract = arg;
+}
+
 static void set_draw (int arg) {
-  if (arg== APL_DRAW_SET) {
+  if (arg == APL_DRAW_SET) {
     if (args.size () >= 1) {
       switch (*(args[0].c_str ())) {
       case 'l':
@@ -411,6 +449,45 @@ static void set_dest (int arg) {
   }
   else target_idx = DEF_SCREEN;
 }
+
+static void
+set_kwd (string const& str)
+{
+  keyword = str;
+}
+
+
+static void
+append_arg (string const& str)
+{
+  args.push_back (str);
+}
+
+template <typename Iterator>
+struct option_parser : qi::grammar<Iterator, ascii::space_type> {
+  option_parser() : option_parser::base_type(start) {
+    using qi::int_;
+    using qi::lit;
+    using qi::lexeme;
+    using ascii::char_;
+
+    keyword_string  %= lexeme[+char_("0-9a-zA-Z_")];
+    unquoted_string %= lexeme[+(char_ - ' ' - ';')];
+    quoted_string   %= lexeme['"' >> +(char_ - '"') >> '"'];
+    any_string      %= quoted_string | unquoted_string;
+
+    start %= keyword_string[&set_kwd]
+      >> *any_string[&append_arg]
+      >> *( ',' >> any_string[&append_arg] )
+      >> ';' ;
+  }
+
+  qi::rule<Iterator, string(), ascii::space_type> any_string;
+  qi::rule<Iterator, string(), ascii::space_type> keyword_string;
+  qi::rule<Iterator, string(), ascii::space_type> unquoted_string;
+  qi::rule<Iterator, string(), ascii::space_type> quoted_string;
+  qi::rule<Iterator,           ascii::space_type> start;
+};
 
 enum {APL_BG_SET, APL_BG_BLACK, APL_BG_WHITE};
 
@@ -488,7 +565,60 @@ kwd_s kwds[] = {
   {"bgwhite",		set_background,	APL_BG_WHITE},
   {"bgblack",		set_background,	APL_BG_BLACK},
   {"background",	set_background,	APL_BG_SET},
-  {"bg",		set_background,	APL_BG_SET}
+  {"bg",		set_background,	APL_BG_SET},
+  {"extract",		set_extract,	APL_EXTRACT_SET},
+  {"real",		set_extract,	APL_EXTRACT_REAL},
+  {"imag",		set_extract,	APL_EXTRACT_IMAGINARY},
+  {"mag",		set_extract,	APL_EXTRACT_MAGNITUDE},
+  {"pha",		set_extract,	APL_EXTRACT_PHASE}
 };
 
 int nr_kwds = sizeof (kwds) / sizeof (kwd_s);
+
+
+static void
+handle_opts ()
+{
+  if (keyword.empty ()) return;
+
+  if (kwd_map.empty ())
+    for (int i = 0; i < nr_kwds; i++)
+      kwd_map [opt_kwd (i)] = i;
+
+  if (kwd_map.find (keyword) != kwd_map.end ()) {
+    int idx = -1;
+    idx = kwd_map.at (keyword);
+    if (idx >= 0) (*opt_fcn (idx))(opt_arg (idx));
+  }
+  else {
+    UERR << "invalid option " << keyword << endl;
+    // fixme -- complain abt bad kwd
+  }
+  
+  keyword.clear ();
+  args.clear ();
+}
+
+void
+parse_opts (const string sstr)
+{
+  using boost::spirit::ascii::space;
+  typedef string::const_iterator iterator_type;
+  typedef option_parser<iterator_type> option_parser;
+
+  option_parser g;
+
+  string::const_iterator iter = sstr.begin();
+  string::const_iterator end  = sstr.end();
+
+  //  global_B = B;
+
+  while (iter != end) {
+    bool rc = phrase_parse(iter, end, g, space);
+    
+    handle_opts ();
+    if (!rc) break;
+  }
+
+}
+

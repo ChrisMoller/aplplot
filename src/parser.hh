@@ -70,5 +70,8 @@ extern double		xorigin;
 extern double		xspan;
 extern int		plot_pipe_fd;
 extern int		axis;
+extern int		extract;
 
 extern int nr_kwds;
+
+extern void parse_opts (const string sstr);
