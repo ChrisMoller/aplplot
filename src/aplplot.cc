@@ -173,8 +173,9 @@ open_pipe ()
   }
 }
 
+#define MKCOLOUR(a,r,g,b) ((a << 24) | (r << 16) | (g << 8) | (b << 0))
 #define GP_CLEAR "set object rectangle from screen 0,0 to screen 1,1 \
-behind fillcolor rgb 'white' fillstyle solid noborder\n"
+behind fillcolor rgb '0x%08x' fillstyle solid noborder\n"
 
 static void
 plot_simple_y (vector<double> *rvec, vector<double> *ivec, int extr)
@@ -203,7 +204,7 @@ plot_simple_y (vector<double> *rvec, vector<double> *ivec, int extr)
   }
   fprintf (gp, "EOD\n");
 
-  fprintf (gp, GP_CLEAR);
+  fprintf (gp, GP_CLEAR, MKCOLOUR (bgalpha, bgred, bggreen, bgblue));
   fprintf (gp, "plot $Mydata with linespoints t \"whatever\"\n");
 
   fflush (gp);

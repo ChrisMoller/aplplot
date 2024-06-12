@@ -56,6 +56,7 @@ string           filename;
 bool             embed		= false;
 bool             menu		= false;
 int              target_idx	= DEF_SCREEN;
+unsigned char    bgalpha	= 0;
 unsigned char    bgred		= 0;
 unsigned char    bggreen 	= 0;
 unsigned char    bgblue 	= 0;
@@ -87,7 +88,7 @@ static void reset_options (int arg) {
   xcol		= -1;
   draw		= APL_DRAW_LINES;
   target_idx	= DEF_SCREEN;
-  bgred		= bggreen = bgblue = 0;
+  bgred = bggreen = bgblue = 0; bgalpha = 0;
   xorigin	= 0.0;
   xspan		= -1.0;
   embed		= false;
@@ -155,6 +156,10 @@ aplplot_get_value (int which)
   case VALUE_COLOUR_BLUE:
     rc.type = which;
     rc.val.i = (int)bgblue;
+    break;
+  case VALUE_COLOUR_ALPHA:
+    rc.type = which;
+    rc.val.i = (int)bgalpha;
     break;
   case VALUE_X_COL:
     rc.type = which;
@@ -263,6 +268,9 @@ aplplot_set_value (value_u val)
     break;
   case VALUE_COLOUR_BLUE:
     bgblue   = (unsigned char)val.val.i;
+    break;
+  case VALUE_COLOUR_ALPHA:
+    bgalpha   = (unsigned char)val.val.i;
     break;
   case VALUE_GO:
     eval_B (global_B);
@@ -492,19 +500,35 @@ struct option_parser : qi::grammar<Iterator, ascii::space_type> {
 enum {APL_BG_SET, APL_BG_BLACK, APL_BG_WHITE};
 
 static void set_background (int arg) {
+  if (isalpha (*(args[0].c_str ()))) {
+    fprintf (stderr, "got alpha %s\n", args[0].c_str ());
+    return;
+  }
   switch (arg) {
   case APL_BG_WHITE:
-    bgred = 255; bggreen = 255; bgblue = 255;
+    bgred = 255; bggreen = 255; bgblue = 255; bgalpha = 0;
     break;
   case APL_BG_BLACK:
-    bgred = 0; bggreen = 0, bgblue = 0;
+    bgred = 0; bggreen = 0, bgblue = 0; bgalpha = 0;
     break;
   case APL_BG_SET:
-     if (args.size () >= 3) {
+    if (args.size () == 4) {
+      int a,r,g,b;
+      istringstream (args[0]) >> a;
+      istringstream (args[1]) >> r;
+      istringstream (args[2]) >> g;
+      istringstream (args[3]) >> b;
+      bgalpha = (unsigned char)a;
+      bgred   = (unsigned char)r;
+      bggreen = (unsigned char)g;
+      bgblue  = (unsigned char)b;
+    }
+    else if (args.size () == 3) {
       int r,g,b;
       istringstream (args[0]) >> r;
       istringstream (args[1]) >> g;
       istringstream (args[2]) >> b;
+      bgalpha = 0;
       bgred   = (unsigned char)r;
       bggreen = (unsigned char)g;
       bgblue  = (unsigned char)b;

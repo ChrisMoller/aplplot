@@ -63,6 +63,7 @@ extern string		filename;
 extern bool		embed;
 extern bool		menu;
 extern int		target_idx;
+extern unsigned char	bgalpha;
 extern unsigned char	bgred;
 extern unsigned char	bggreen;
 extern unsigned char	bgblue;

@@ -44,6 +44,7 @@ enum {
       VALUE_ANGLES,		// int
       VALUE_X_ORIGIN,		// double
       VALUE_X_SPAN,		// double
+      VALUE_COLOUR_ALPHA,	// int
       VALUE_COLOUR_RED,		// int
       VALUE_COLOUR_GREEN,	// int
       VALUE_COLOUR_BLUE,	// int
