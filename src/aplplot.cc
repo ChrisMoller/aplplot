@@ -177,7 +177,7 @@ open_pipe ()
 behind fillcolor rgb 'white' fillstyle solid noborder\n"
 
 static void
-plot_complex_y (vector<double> rvec, vector<double> ivec, int extr)
+plot_simple_y (vector<double> *rvec, vector<double> *ivec, int extr)
 {
   fprintf (stderr, "plot_simple_y\n");
   FILE *gp = open_pipe ();
@@ -185,16 +185,20 @@ plot_complex_y (vector<double> rvec, vector<double> ivec, int extr)
   fprintf (gp, "$Mydata << EOD\n");
   switch(extr) {
   case APL_EXTRACT_REAL:
-    loop (i, rvec.size ()) fprintf (gp, "%g\n", rvec[i]);
+    loop (i, rvec->size ())
+      fprintf (gp, "%g\n", (*rvec)[i]);
     break;
   case APL_EXTRACT_IMAGINARY:
-    loop (i, rvec.size ()) fprintf (gp, "%g\n", ivec[i]);
+    loop (i, rvec->size ())
+      fprintf (gp, "%g\n", (*ivec)[i]);
     break;
   case APL_EXTRACT_MAGNITUDE:
-    loop (i, rvec.size ()) fprintf (gp, "%g\n", hypot (ivec[i], rvec[i]));
+    loop (i, rvec->size ())
+      fprintf (gp, "%g\n", hypot ((*ivec)[i], (*rvec)[i]));
     break;
   case APL_EXTRACT_PHASE:
-    loop (i, rvec.size ()) fprintf (gp, "%g\n", atan2 (ivec[i], rvec[i]));
+    loop (i, rvec->size ())
+      fprintf (gp, "%g\n", atan2 ((*ivec)[i], (*rvec)[i]));
     break;
   }
   fprintf (gp, "EOD\n");
@@ -215,7 +219,7 @@ eval_XB(Value_P X, Value_P B)
   const CellType  celltype = B->deep_cell_types();
 
   if (!(celltype & ~CT_NUMERIC)) {
-    if (celltype &  CT_COMPLEX) {
+    if (celltype &  CT_COMPLEX) {		// complex
       switch(rank) {
       case 1:
 	{
@@ -226,7 +230,28 @@ eval_XB(Value_P X, Value_P B)
 	    rvec[p] = (double)(cell_B.get_real_value ());
 	    ivec[p] = (double)(cell_B.get_imag_value ());
 	  }
-	  plot_complex_y (rvec, ivec, extract);
+	  plot_simple_y (&rvec, &ivec, extract);
+	}
+	break;
+      case 2:
+	break;
+      case 3:
+	break;
+      default:
+        RANK_ERROR;
+	break;
+      }
+    }
+    else {
+      switch(rank) {				// real
+      case 1:
+	{
+	  vector<double> rvec (count);
+	  loop(p, count) {
+	    const Cell & cell_B = B->get_cravel(p);
+	    rvec[p] = (double)(cell_B.get_real_value ());
+	  }
+	  plot_simple_y (&rvec, nullptr, APL_EXTRACT_REAL);
 	}
 	break;
       case 2:
