@@ -49,6 +49,7 @@ enum {
       VALUE_COLOUR_GREEN,	// int
       VALUE_COLOUR_BLUE,	// int
       VALUE_EXTRACT,		// int
+      VALUE_INDEP,		// int
       VALUE_GO,
       VALUE_ERR
 };

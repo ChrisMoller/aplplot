@@ -66,6 +66,7 @@ double           xspan		= -1.0;
 int              plot_pipe_fd 	= -1;
 int              axis 		= -1;	// fixme add to menu
 int		 extract	= APL_EXTRACT_REAL;
+int		 indep		= -1;
 
 //Value_P global_B;
 
@@ -126,6 +127,10 @@ aplplot_get_value (int which)
   value_u rc;
   rc.type = VALUE_ERR;
   switch(which) {
+  case VALUE_INDEP:
+    rc.type = which;
+    rc.val.i = indep;
+    break;
   case VALUE_WIDTH:
     rc.type = which;
     rc.val.i = plot_width;
@@ -214,6 +219,9 @@ void
 aplplot_set_value (value_u val)
 {
   switch(val.type) {
+  case VALUE_INDEP:
+    indep =  val.val.i;
+    break;
   case VALUE_WIDTH:
     plot_width =  val.val.i;
     break;
@@ -282,6 +290,10 @@ aplplot_set_value (value_u val)
   default:		// do nothing
     break;
   }
+}
+
+static void set_indep (int arg) {
+  if (args.size () >= 1) istringstream (args[0]) >> indep;
 }
 
 static void set_width (int arg) {
@@ -603,7 +615,8 @@ kwd_s kwds[] = {
   {"real",		set_extract,	APL_EXTRACT_REAL},
   {"imag",		set_extract,	APL_EXTRACT_IMAGINARY},
   {"mag",		set_extract,	APL_EXTRACT_MAGNITUDE},
-  {"pha",		set_extract,	APL_EXTRACT_PHASE}
+  {"pha",		set_extract,	APL_EXTRACT_PHASE},
+  {"indep",		set_indep,	0}
 };
 
 int nr_kwds = sizeof (kwds) / sizeof (kwd_s);

@@ -214,9 +214,59 @@ plot_simple_y (vector<double> *rvec, vector<double> *ivec, int extr)
   fprintf (gp, "plot $Mydata with linespoints t \"whatever\"\n");
 
   fflush (gp);
-  //  fclose (gp);
 }
 
+static void
+plot_multiple (int rows, int cols, Value_P B)
+{
+  FILE *gp = open_pipe ();
+  
+  fprintf (gp, "$Mydata << EOD\n");
+  string tryit;
+  loop (c, cols) {
+    loop (r, rows) {
+      int offset = c + (r * cols);
+      const Cell & cell_B = B->get_cravel(offset);
+      tryit += " " + to_string ((double)(cell_B.get_real_value ()));
+    }
+    fprintf (gp, "%s\n", tryit.c_str ());
+    tryit.clear ();
+  }
+  fprintf (gp, "EOD\n");
+  if (indep < 1) {
+    loop (r, rows) {
+      if (r > 0) {
+	fprintf (gp,
+		 ", $Mydata using %d with linespoints t \"whatever\"", r+1);
+      }
+      else {
+	fprintf (gp,
+		 "plot $Mydata using %d with linespoints t \"whatever\"", r+1);
+      }
+    }
+  }
+  else {
+    int o = 0;
+    loop (r, rows) {
+      if (r != indep) {
+	if (o > 0) {
+	  fprintf (gp,
+		   ", $Mydata using %d:%d with linespoints t \"whatever\"",
+		   indep, r+1);
+	  o++;
+	}
+	else {
+	  fprintf (gp,
+		   "plot $Mydata using %d:%d with linespoints t \"whatever\"",
+		   indep, r+1);
+	  o++;
+	}
+      }
+    }
+  }
+  fprintf (gp, "\n");
+  fflush (gp);
+}
 
 static Token
 eval_XB(Value_P X, Value_P B)
@@ -262,6 +312,23 @@ eval_XB(Value_P X, Value_P B)
 	}
 	break;
       case 2:
+	{
+	  int rows = (int)(B->get_rows());
+	  int cols = (int)(B->get_cols());
+	  if (rows == 1) {
+	    vector<double> rvec (count);
+	    loop(p, count) {
+	      const Cell & cell_B = B->get_cravel(p);
+	      rvec[p] = (double)(cell_B.get_real_value ());
+	    }
+	    plot_simple_y (&rvec, nullptr, APL_EXTRACT_REAL);
+	  }
+	  if (indep > rows)
+	    RANK_ERROR;
+	  plot_multiple (rows, cols, B);
+#if 0
+#endif
+	}
 	break;
       case 3:
 	break;

@@ -72,6 +72,7 @@ extern double		xspan;
 extern int		plot_pipe_fd;
 extern int		axis;
 extern int		extract;
+extern int		indep;
 
 extern int nr_kwds;
 
