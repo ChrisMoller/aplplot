@@ -248,7 +248,7 @@ plot_multiple (int rows, int cols, Value_P B)
   else {
     int o = 0;
     loop (r, rows) {
-      if (r != indep) {
+      if (r != indep-1) {
 	if (o > 0) {
 	  fprintf (gp,
 		   ", $Mydata using %d:%d with linespoints t \"whatever\"",
